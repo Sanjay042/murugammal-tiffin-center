@@ -158,6 +158,9 @@ function cacheDom() {
   elements.reportDelivery = document.getElementById("report-delivery");
   elements.reportModeBreakdown = document.getElementById("report-mode-breakdown");
   elements.reportTableBody = document.getElementById("report-table-body");
+
+  // 👇 NEW: the whole admin section wrapper
+  elements.adminArea = document.getElementById("admin-area");
 }
 
 // --------- STATE BOOTSTRAP ----------
@@ -222,6 +225,25 @@ function attachEvents() {
   elements.refreshReportBtn.addEventListener("click", renderReports);
   elements.printReportBtn.addEventListener("click", printReport);
 }
+// --------- SECRET ADMIN SHORTCUT ----------
+// Press Ctrl + Shift + A to show the admin area
+document.addEventListener("keydown", (event) => {
+  if (
+    event.ctrlKey &&
+    event.shiftKey &&
+    event.key.toLowerCase() === "a"
+  ) {
+    if (elements.adminArea && elements.adminArea.classList.contains("hidden-admin")) {
+      elements.adminArea.classList.remove("hidden-admin");
+      window.scrollTo({
+        top: elements.adminArea.offsetTop,
+        behavior: "smooth",
+      });
+      notify("Admin login opened (Ctrl + Shift + A).");
+    }
+  }
+});
+
 
 // --------- HELPERS ----------
 function initializeQR() {
