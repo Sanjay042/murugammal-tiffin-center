@@ -1,319 +1,368 @@
-// ============================================================================
-// MURUGAMMAL TIFFIN CENTER · Order Management System
-// ============================================================================
-
-// ─────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
 // CONFIG
-// ─────────────────────────────────────────────────────────────────────────
-
+// ─────────────────────────────────────────────
 const UPI_ID = "sanjaychinnavan42-2@okicici";
 const UPI_NAME = "Murugammal Tiffin Center";
-const ADMIN_PASSWORD = "63695599";
 
-// ─────────────────────────────────────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────────────────────────────────────
+// Hard-coded menu for now (you can change prices anytime)
+const MENU = [
+  {
+    id: "idly",
+    name: "Plain Idly (1 piece)",
+    price: 2.5,
+    description: "Steamed rice cakes with coconut & red chutney.",
+    image: "images/idly1.jpg",
+  },
+  {
+    id: "dosa",
+    name: "Crispy Dosa",
+    price: 8,
+    description: "Crispy dosa with sambar & chutneys.",
+    image: "images/dosa1.jpg",
+  },
+  {
+    id: "onion-dosa",
+    name: "Onion Dosa",
+    price: 12,
+    description: "Dosa topped with caramelized onions.",
+    image: "images/od.jpg",
+  },
+  {
+    id: "pepper-egg",
+    name: "Pepper Egg",
+    price: 10,
+    description: "Boiled egg with pepper & salt.",
+    image: "images/boil1.jpg",
+  },
+  {
+    id: "omelette",
+    name: "Masala Omelette",
+    price: 15,
+    description: "Two-egg omelette with onion & chilli.",
+    image: "images/om123.jpg",
+  },
+  {
+    id: "half-boil",
+    name: "Half Boil",
+    price: 10,
+    description: "Soft-boiled egg with pepper & salt.",
+    image: "images/halfboil.jpg",
+  },
+  {
+    id: "egg-dosa",
+    name: "Egg Dosa",
+    price: 15,
+    description: "Egg layered dosa, hot & filling.",
+    image: "images/eggdosa1.jpg",
+  },
+];
 
+// ─────────────────────────────────────────────
+// STATE + DOM
+// ─────────────────────────────────────────────
 let cart = [];
-let qrInstance;
+let qrInstance = null;
 let lastUpiUrl = "";
 
-// ─────────────────────────────────────────────────────────────────────────
+const el = {}; // all DOM nodes stored here
+
+document.addEventListener("DOMContentLoaded", () => {
+  cacheDom();
+  attachEvents();
+  renderMenu();
+  updateCartUI();
+  handleOrderTypeChange();
+  handleOrderModeChange();
+
+  if (el.qrCanvas) {
+    qrInstance = new QRious({
+      element: el.qrCanvas,
+      size: 200,
+      value: "",
+    });
+  }
+});
+
+// ─────────────────────────────────────────────
 // DOM CACHE
-// ─────────────────────────────────────────────────────────────────────────
-
-const elements = {};
-
+// ─────────────────────────────────────────────
 function cacheDom() {
-  // Menu & Cart
-  elements.menuGrid = document.getElementById("menu-grid");
-  elements.cartTableBody = document.getElementById("cart-table-body");
-  elements.cartCountPill = document.getElementById("cart-count-pill");
-  elements.clearCartBtn = document.getElementById("clear-cart-btn");
-  elements.printBillBtn = document.getElementById("print-bill-btn");
+  el.menuGrid = document.getElementById("menu-grid");
+  el.cartTableBody = document.getElementById("cart-table-body");
+  el.cartCountPill = document.getElementById("cart-count-pill");
 
-  // Order Type
-  elements.orderTypeRadios = document.querySelectorAll(
-    'input[name="order-type"]'
-  );
-  elements.deliverySection = document.getElementById("delivery-section");
-  elements.deliveryDistance = document.getElementById("delivery-distance");
-  elements.deliveryAddress = document.getElementById("delivery-address");
+  el.orderTypeRadios = document.querySelectorAll('input[name="order-type"]');
+  el.deliverySection = document.getElementById("delivery-section");
+  el.deliveryDistance = document.getElementById("delivery-distance");
+  el.deliveryAddress = document.getElementById("delivery-address");
 
-  // Totals
-  elements.subtotalAmount = document.getElementById("subtotal-amount");
-  elements.deliveryAmount = document.getElementById("delivery-amount");
-  elements.grandAmount = document.getElementById("grand-amount");
+  el.subtotalAmount = document.getElementById("subtotal-amount");
+  el.deliveryAmount = document.getElementById("delivery-amount");
+  el.grandAmount = document.getElementById("grand-amount");
 
-  // Order Mode
-  elements.orderModeRadios = document.querySelectorAll(
-    'input[name="order-mode"]'
-  );
-  elements.payNowPanel = document.getElementById("pay-now-panel");
-  elements.preorderPanel = document.getElementById("preorder-panel");
+  el.orderModeRadios = document.querySelectorAll('input[name="order-mode"]');
+  el.payNowPanel = document.getElementById("pay-now-panel");
+  el.preorderPanel = document.getElementById("preorder-panel");
 
-  // Payment
-  elements.qrCanvas = document.getElementById("qr-canvas");
-  elements.qrNote = document.getElementById("qr-note");
-  elements.generateQrBtn = document.getElementById("generate-qr-btn");
-  elements.paymentDoneBtn = document.getElementById("payment-done-btn");
-  elements.upiPayBtn = document.getElementById("upi-pay-btn");
+  el.qrCanvas = document.getElementById("qr-canvas");
+  el.qrNote = document.getElementById("qr-note");
+  el.generateQrBtn = document.getElementById("generate-qr-btn");
+  el.paymentDoneBtn = document.getElementById("payment-done-btn");
+  el.upiPayBtn = document.getElementById("upi-pay-btn");
 
-  // Preorder Form
-  elements.preorderForm = document.getElementById("preorder-form");
-  elements.preorderName = document.getElementById("preorder-name");
-  elements.preorderContact = document.getElementById("preorder-contact");
-  elements.preorderTime = document.getElementById("preorder-time");
-  elements.preorderNotes = document.getElementById("preorder-notes");
+  el.clearCartBtn = document.getElementById("clear-cart-btn");
+  el.printBillBtn = document.getElementById("print-bill-btn");
 
-  // Toast
-  elements.toast = document.getElementById("toast");
+  el.preorderForm = document.getElementById("preorder-form");
+  el.preorderName = document.getElementById("preorder-name");
+  el.preorderContact = document.getElementById("preorder-contact");
+  el.preorderTime = document.getElementById("preorder-time");
+  el.preorderNotes = document.getElementById("preorder-notes");
 
-  // Admin (may not exist on customer page)
-  elements.adminLoginBtn = document.getElementById("admin-login-btn");
-  elements.adminLogoutBtn = document.getElementById("admin-logout-btn");
-  elements.adminPasswordInput = document.getElementById("admin-password-input");
-  elements.adminArea = document.getElementById("admin-area");
-  elements.menuForm = document.getElementById("menu-form");
-  elements.menuCancelBtn = document.getElementById("menu-cancel-btn");
-  elements.reportsArea = document.getElementById("reports-area");
-  elements.refreshReportBtn = document.getElementById("refresh-report-btn");
-  elements.printReportBtn = document.getElementById("print-report-btn");
+  el.toast = document.getElementById("toast");
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// EVENT ATTACHMENT
-// ─────────────────────────────────────────────────────────────────────────
-
+// ─────────────────────────────────────────────
+// EVENTS
+// ─────────────────────────────────────────────
 function attachEvents() {
-  // Order Type
-  elements.orderTypeRadios.forEach((radio) => {
-    radio.addEventListener("change", handleOrderTypeChange);
+  // Menu clicks (add to cart)
+  el.menuGrid.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-action='add-to-cart']");
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const dish = MENU.find((d) => d.id === id);
+    if (dish) addToCart(dish);
   });
 
-  // Delivery Distance
-  elements.deliveryDistance.addEventListener("change", updateTotals);
-
-  // Totals
-  elements.deliveryDistance.addEventListener("input", updateTotals);
-
-  // Order Mode
-  elements.orderModeRadios.forEach((radio) => {
-    radio.addEventListener("change", handleOrderModeChange);
+  // Cart quantity + remove
+  el.cartTableBody.addEventListener("input", (e) => {
+    if (!e.target.classList.contains("cart-qty")) return;
+    const id = e.target.dataset.id;
+    const value = Math.max(1, parseInt(e.target.value) || 1);
+    updateCartQuantity(id, value);
   });
 
-  // Cart Actions
-  elements.clearCartBtn.addEventListener("click", clearCart);
-  elements.printBillBtn.addEventListener("click", printBill);
+  el.cartTableBody.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-action='remove-item']");
+    if (!btn) return;
+    const id = btn.dataset.id;
+    removeFromCart(id);
+  });
+
+  // Order type pickup / delivery
+  el.orderTypeRadios.forEach((r) =>
+    r.addEventListener("change", handleOrderTypeChange)
+  );
+  el.deliveryDistance.addEventListener("input", updateTotals);
+
+  // Order mode pay-now / preorder
+  el.orderModeRadios.forEach((r) =>
+    r.addEventListener("change", handleOrderModeChange)
+  );
+
+  // Cart buttons
+  el.clearCartBtn.addEventListener("click", clearCart);
+  el.printBillBtn.addEventListener("click", printBill);
 
   // Payment
-  elements.generateQrBtn.addEventListener("click", handleGenerateQR);
-  elements.paymentDoneBtn.addEventListener("click", handlePaymentDone);
+  el.generateQrBtn.addEventListener("click", handleGenerateQR);
+  el.paymentDoneBtn.addEventListener("click", handlePaymentDone);
+  el.upiPayBtn.addEventListener("click", handleUpiPay);
 
-  // UPI pay button (only exists on customer page)
-  if (elements.upiPayBtn) {
-    elements.upiPayBtn.addEventListener("click", handleUpiPay);
-  }
-
-  // Preorder Form
-  elements.preorderForm.addEventListener("submit", handlePreorderSubmit);
-
-  // Admin events only if admin page is loaded
-  if (elements.adminLoginBtn) {
-    elements.adminLoginBtn.addEventListener("click", unlockAdmin);
-  }
-  if (elements.adminLogoutBtn) {
-    elements.adminLogoutBtn.addEventListener("click", lockAdmin);
-  }
-  if (elements.menuForm) {
-    elements.menuForm.addEventListener("submit", handleMenuSubmit);
-    elements.menuCancelBtn.addEventListener("click", resetMenuForm);
-  }
-  if (elements.refreshReportBtn) {
-    elements.refreshReportBtn.addEventListener("click", renderReports);
-  }
-  if (elements.printReportBtn) {
-    elements.printReportBtn.addEventListener("click", printReport);
-  }
+  // Preorder
+  el.preorderForm.addEventListener("submit", handlePreorderSubmit);
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// MENU RENDERING
-// ─────────────────────────────────────────────────────────────────────────
-
+// ─────────────────────────────────────────────
+// MENU
+// ─────────────────────────────────────────────
 function renderMenu() {
-  const menu = getMenuFromStorage();
-  elements.menuGrid.innerHTML = "";
-
-  menu.forEach((dish) => {
-    const card = document.createElement("div");
-    card.className = "menu-card";
-    card.onclick = () => addToCart(dish);
-    card.innerHTML = `
-      <div class="menu-card__image" style="background-color: ${dish.color}; display: flex; align-items: center; justify-content: center;">
-        <span style="font-size: 2.5rem;">${dish.emoji}</span>
-      </div>
-      <div class="menu-card__text">
-        <h3>${dish.name}</h3>
-        <p class="menu-card__price">${formatCurrency(dish.price)}</p>
-      </div>
+  el.menuGrid.innerHTML = MENU.map((item) => {
+    return `
+      <article class="menu-card">
+        <img src="${item.image}" alt="${item.name}" />
+        <div class="content">
+          <div class="meta">
+            <strong>${item.name}</strong>
+            <span>${formatCurrency(item.price)}</span>
+          </div>
+          <p>${item.description}</p>
+          <button
+            class="btn filled"
+            data-action="add-to-cart"
+            data-id="${item.id}"
+          >
+            Add to cart
+          </button>
+        </div>
+      </article>
     `;
-    elements.menuGrid.appendChild(card);
-  });
+  }).join("");
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// CART MANAGEMENT
-// ─────────────────────────────────────────────────────────────────────────
-
+// ─────────────────────────────────────────────
+// CART
+// ─────────────────────────────────────────────
 function addToCart(dish) {
-  const existing = cart.find((item) => item.id === dish.id);
+  const existing = cart.find((i) => i.id === dish.id);
   if (existing) {
     existing.qty += 1;
   } else {
-    cart.push({ ...dish, qty: 1 });
+    cart.push({
+      id: dish.id,
+      name: dish.name,
+      price: dish.price,
+      qty: 1,
+    });
   }
+  updateCartUI();
+  notify(`${dish.name} added to cart.`);
+}
+
+function updateCartQuantity(id, qty) {
+  const item = cart.find((i) => i.id === id);
+  if (!item) return;
+  item.qty = qty;
   updateCartUI();
 }
 
-function removeFromCart(dishId) {
-  cart = cart.filter((item) => item.id !== dishId);
+function removeFromCart(id) {
+  cart = cart.filter((i) => i.id !== id);
   updateCartUI();
-}
-
-function updateCartQuantity(dishId, newQty) {
-  if (newQty <= 0) {
-    removeFromCart(dishId);
-    return;
-  }
-  const item = cart.find((i) => i.id === dishId);
-  if (item) {
-    item.qty = newQty;
-  }
-  updateCartUI();
+  notify("Item removed from cart.");
 }
 
 function clearCart() {
-  if (cart.length === 0) {
+  if (!cart.length) {
     notify("Cart is already empty.");
     return;
   }
   if (!confirm("Clear the entire cart?")) return;
   cart = [];
   updateCartUI();
+  notify("Cart cleared.");
 }
 
 function updateCartUI() {
-  // Render table
-  if (cart.length === 0) {
-    elements.cartTableBody.innerHTML =
+  if (!cart.length) {
+    el.cartTableBody.innerHTML =
       '<tr><td colspan="5" class="empty">Cart is empty</td></tr>';
   } else {
-    elements.cartTableBody.innerHTML = cart
+    el.cartTableBody.innerHTML = cart
       .map(
         (item) => `
-        <tr>
-          <td>${item.name}</td>
-          <td class="num">
-            <input type="number" min="1" value="${item.qty}" 
-              onchange="updateCartQuantity('${item.id}', parseInt(this.value))">
-          </td>
-          <td class="num">${formatCurrency(item.price)}</td>
-          <td class="num">${formatCurrency(item.price * item.qty)}</td>
-          <td>
-            <button class="btn ghost small" onclick="removeFromCart('${item.id}')">✕</button>
-          </td>
-        </tr>
-      `
+      <tr>
+        <td>${item.name}</td>
+        <td class="num">
+          <input
+            type="number"
+            min="1"
+            class="qty-input cart-qty"
+            data-id="${item.id}"
+            value="${item.qty}"
+          />
+        </td>
+        <td class="num">${formatCurrency(item.price)}</td>
+        <td class="num">${formatCurrency(item.price * item.qty)}</td>
+        <td class="num">
+          <button
+            class="btn ghost sm"
+            data-action="remove-item"
+            data-id="${item.id}"
+          >
+            Remove
+          </button>
+        </td>
+      </tr>
+    `
       )
       .join("");
   }
 
-  // Update count pill
-  const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-  elements.cartCountPill.textContent =
+  const totalItems = cart.reduce((sum, i) => sum + i.qty, 0);
+  el.cartCountPill.textContent =
     totalItems === 1 ? "1 item" : `${totalItems} items`;
 
   updateTotals();
 }
 
-function updateTotals() {
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-  const distance = parseInt(elements.deliveryDistance.value) || 0;
-  const delivery = calculateDeliveryCharge(distance);
-  const grand = subtotal + delivery;
-
-  elements.subtotalAmount.textContent = formatCurrency(subtotal);
-  elements.deliveryAmount.textContent = formatCurrency(delivery);
-  elements.grandAmount.textContent = formatCurrency(grand);
+// ─────────────────────────────────────────────
+// TOTALS + DELIVERY
+// ─────────────────────────────────────────────
+function getOrderType() {
+  const checked = document.querySelector('input[name="order-type"]:checked');
+  return checked ? checked.value : "pickup";
 }
-
-function calculateDeliveryCharge(distanceMeters) {
-  if (getSelectedOrderType() === "pickup") {
-    return 0;
-  }
-  if (distanceMeters <= 100) {
-    return 10;
-  }
-  if (distanceMeters <= 250) {
-    return 20;
-  }
-  if (distanceMeters <= 500) {
-    return 30;
-  }
-  return 40;
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// ORDER TYPE & MODE
-// ─────────────────────────────────────────────────────────────────────────
 
 function handleOrderTypeChange() {
-  const type = getSelectedOrderType();
+  const type = getOrderType();
   if (type === "delivery") {
-    elements.deliverySection.style.display = "block";
+    el.deliverySection.style.display = "block";
   } else {
-    elements.deliverySection.style.display = "none";
+    el.deliverySection.style.display = "none";
   }
   updateTotals();
 }
 
-function getSelectedOrderType() {
-  const checked = document.querySelector(
-    'input[name="order-type"]:checked'
-  );
-  return checked ? checked.value : "pickup";
-}
-
-function handleOrderModeChange() {
-  const mode = getSelectedOrderMode();
-  if (mode === "pay-now") {
-    elements.payNowPanel.style.display = "block";
-    elements.preorderPanel.style.display = "none";
-  } else {
-    elements.payNowPanel.style.display = "none";
-    elements.preorderPanel.style.display = "block";
-  }
-}
-
-function getSelectedOrderMode() {
+function getOrderMode() {
   const checked = document.querySelector('input[name="order-mode"]:checked');
   return checked ? checked.value : "pay-now";
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// PAYMENT: QR & UPI
-// ─────────────────────────────────────────────────────────────────────────
+function handleOrderModeChange() {
+  const mode = getOrderMode();
+  if (mode === "pay-now") {
+    el.payNowPanel.style.display = "block";
+    el.preorderPanel.style.display = "none";
+  } else {
+    el.payNowPanel.style.display = "none";
+    el.preorderPanel.style.display = "block";
+  }
+}
+
+function updateTotals() {
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const delivery =
+    getOrderType() === "delivery"
+      ? calculateDeliveryCharge(parseInt(el.deliveryDistance.value) || 0)
+      : 0;
+  const grand = subtotal + delivery;
+
+  el.subtotalAmount.textContent = formatCurrency(subtotal);
+  el.deliveryAmount.textContent = formatCurrency(delivery);
+  el.grandAmount.textContent = formatCurrency(grand);
+}
+
+function calculateDeliveryCharge(distance) {
+  if (distance <= 0) return 0;
+  if (distance <= 100) return 10;
+  if (distance <= 250) return 20;
+  if (distance <= 500) return 30;
+  return 40;
+}
+
+// ─────────────────────────────────────────────
+// PAYMENT (QR + UPI APP)
+// ─────────────────────────────────────────────
+function ensureCartNotEmpty() {
+  if (!cart.length) {
+    notify("Add at least one item to cart first.");
+    return false;
+  }
+  return true;
+}
 
 function handleGenerateQR() {
-  if (cart.length === 0) {
-    notify("Your cart is empty. Add items first.");
+  if (!ensureCartNotEmpty()) return;
+
+  const amount = Number(el.grandAmount.textContent.replace("₹", "")) || 0;
+  if (!amount) {
+    notify("Amount is zero.");
     return;
   }
 
-  const amount = parseFloat(elements.grandAmount.textContent.replace("₹", ""));
   const orderId = `MTF-${Date.now()}`;
-
   const upiString = `upi://pay?pa=${encodeURIComponent(
     UPI_ID
   )}&pn=${encodeURIComponent(
@@ -322,15 +371,16 @@ function handleGenerateQR() {
 
   lastUpiUrl = upiString;
 
-  if (elements.upiPayBtn) {
-    elements.upiPayBtn.style.display = "inline-flex";
+  if (qrInstance) {
+    qrInstance.value = upiString;
   }
 
-  qrInstance.value = upiString;
-  elements.qrNote.textContent = `Scan this QR to pay ${formatCurrency(
+  el.qrNote.textContent = `Scan this QR to pay ${formatCurrency(
     amount
   )}. Reference: ${orderId}`;
-  notify("QR code ready. Please complete payment.");
+  el.upiPayBtn.style.display = "inline-flex"; // show pay button
+
+  notify("QR code ready. You can scan or tap 'Pay with UPI app'.");
 }
 
 function handleUpiPay() {
@@ -338,109 +388,173 @@ function handleUpiPay() {
     notify("Please generate the QR first.");
     return;
   }
-  // This will open UPI apps (GPay, PhonePe, etc.) on mobile
+  // On mobile, this opens GPay / PhonePe / etc
   window.location.href = lastUpiUrl;
 }
 
 function handlePaymentDone() {
-  if (cart.length === 0) {
-    notify("Your cart is empty.");
-    return;
-  }
+  if (!ensureCartNotEmpty()) return;
 
-  const orderType = getSelectedOrderType();
-  const amount = elements.grandAmount.textContent;
-  const orderId = `MTF-${Date.now()}`;
+  const orderType = getOrderType();
+  const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const delivery =
+    orderType === "delivery"
+      ? calculateDeliveryCharge(parseInt(el.deliveryDistance.value) || 0)
+      : 0;
+  const total = subtotal + delivery;
 
-  let summary = `✅ Payment Received!
+  let msg = `✅ Payment Recorded\n\nOrder type: ${
+    orderType === "pickup" ? "Pickup at shop" : "Delivery"
+  }\nTotal: ${formatCurrency(total)}\n\nItems:\n`;
 
-Order ID: ${orderId}
-Type: ${
-    orderType === "pickup" ? "Pickup" : "Delivery"
-  }
-Amount: ${amount}`;
+  msg += cart
+    .map(
+      (item) =>
+        `• ${item.name} x ${item.qty} = ${formatCurrency(
+          item.price * item.qty
+        )}`
+    )
+    .join("\n");
 
   if (orderType === "delivery") {
-    summary += `
-Delivery to: ${elements.deliveryAddress.value || "Not specified"}`;
+    msg += `\n\nDeliver to: ${el.deliveryAddress.value || "Not specified"}`;
   }
 
-  summary += `
-
-Items:
-${cart
-    .map((item) => `  • ${item.name} × ${item.qty} = ${formatCurrency(item.price * item.qty)}`)
-    .join("
-")}`;
-
-  alert(summary);
-  saveOrderToStorage({
-    id: orderId,
-    type: orderType,
-    amount,
-    items: cart,
-    timestamp: new Date().toISOString(),
-  });
-
+  alert(msg);
   cart = [];
   updateCartUI();
-  notify("Order saved. Thank you!");
+  el.upiPayBtn.style.display = "none";
+  el.qrNote.textContent = "QR will appear after you click “Generate QR”.";
+  notify("Order cleared after payment.");
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// PREORDER SUBMISSION
-// ─────────────────────────────────────────────────────────────────────────
-
+// ─────────────────────────────────────────────
+// PREORDER (no payment, just logging)
+// ─────────────────────────────────────────────
 function handlePreorderSubmit(e) {
   e.preventDefault();
+  if (!ensureCartNotEmpty()) return;
 
-  if (cart.length === 0) {
-    notify("Your cart is empty.");
-    return;
-  }
+  const orderType = getOrderType();
+  const name = el.preorderName.value.trim() || "Not given";
+  const contact = el.preorderContact.value.trim() || "Not given";
+  const time = el.preorderTime.value || "Not specified";
+  const notes = el.preorderNotes.value.trim() || "-";
 
-  const name = elements.preorderName.value.trim();
-  const contact = elements.preorderContact.value.trim();
-  const time = elements.preorderTime.value;
-  const notes = elements.preorderNotes.value.trim();
+  const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const delivery =
+    orderType === "delivery"
+      ? calculateDeliveryCharge(parseInt(el.deliveryDistance.value) || 0)
+      : 0;
+  const total = subtotal + delivery;
 
-  if (!contact) {
-    notify("Please provide a contact number.");
-    return;
-  }
+  let msg = `✅ Preorder Saved\n\nName: ${name}\nContact: ${contact}\nMode: ${
+    orderType === "pickup" ? "Pickup" : "Delivery"
+  }\nETA: ${time}\nTotal (approx): ${formatCurrency(
+    total
+  )}\n\nNotes: ${notes}\n\nItems:\n`;
 
-  if (!time) {
-    notify("Please select a pickup/delivery time.");
-    return;
-  }
+  msg += cart
+    .map(
+      (item) =>
+        `• ${item.name} x ${item.qty} = ${formatCurrency(
+          item.price * item.qty
+        )}`
+    )
+    .join("\n");
 
-  const orderId = `MTF-PRE-${Date.now()}`;
-  const amount = elements.grandAmount.textContent;
-  const orderType = getSelectedOrderType();
+  alert(msg);
 
-  const preorder = {
-    id: orderId,
-    name: name || "Guest",
-    contact,
-    time,
-    notes,
-    type: orderType,
-    amount,
-    items: [...cart],
-    timestamp: new Date().toISOString(),
-  };
+  // clear
+  cart = [];
+  updateCartUI();
+  el.preorderForm.reset();
+  notify("Preorder logged. Collect payment at shop / on delivery.");
+}
 
-  savePreorderToStorage(preorder);
+// ─────────────────────────────────────────────
+// PRINT BILL
+// ─────────────────────────────────────────────
+function printBill() {
+  if (!ensureCartNotEmpty()) return;
 
-  let confirmMsg = `✅ Preorder Confirmed!
+  const orderType = getOrderType();
+  const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const delivery =
+    orderType === "delivery"
+      ? calculateDeliveryCharge(parseInt(el.deliveryDistance.value) || 0)
+      : 0;
+  const total = subtotal + delivery;
 
-Order ID: ${orderId}
-Name: ${preorder.name}
-Contact: ${contact}
-Pickup Time: ${time}
-Amount to pay: ${amount}`;
+  const rows = cart
+    .map(
+      (item) => `
+      <tr>
+        <td>${item.name}</td>
+        <td>${item.qty}</td>
+        <td>${formatCurrency(item.price)}</td>
+        <td>${formatCurrency(item.price * item.qty)}</td>
+      </tr>
+  `
+    )
+    .join("");
 
-  if (orderType === "delivery") {
-    confirmMsg += `
-Delivery to: ${elements.deliveryAddress.value || "Address to be confirmed"}`;
-  }
+  const win = window.open("", "_blank", "width=800,height=600");
+  win.document.write(`
+    <html>
+      <head>
+        <title>Murugammal Tiffin Center Bill</title>
+        <style>
+          body { font-family: 'Segoe UI', sans-serif; padding: 24px; }
+          h1 { text-align: center; }
+          table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background: #f9f2ea; }
+          .totals { margin-top: 16px; width: 300px; float: right; }
+          .totals td { border: none; }
+        </style>
+      </head>
+      <body>
+        <h1>Murugammal Tiffin Center</h1>
+        <p>${new Date().toLocaleString()}</p>
+        <p><strong>Order type:</strong> ${
+          orderType === "pickup" ? "Pickup at shop" : "Delivery"
+        }</p>
+        <table>
+          <thead>
+            <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <table class="totals">
+          <tr><td>Subtotal:</td><td>${formatCurrency(subtotal)}</td></tr>
+          <tr><td>Delivery:</td><td>${formatCurrency(delivery)}</td></tr>
+          <tr><td><strong>Grand total:</strong></td><td><strong>${formatCurrency(
+            total
+          )}</strong></td></tr>
+        </table>
+      </body>
+    </html>
+  `);
+  win.document.close();
+  win.focus();
+  win.print();
+}
+
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+function formatCurrency(amount) {
+  const n = Number(amount) || 0;
+  return n % 1 === 0 ? `₹${n.toFixed(0)}` : `₹${n.toFixed(1)}`;
+}
+
+function notify(msg) {
+  if (!el.toast) return;
+  el.toast.textContent = msg;
+  el.toast.classList.add("show");
+  clearTimeout(el.toast._timeout);
+  el.toast._timeout = setTimeout(() => {
+    el.toast.classList.remove("show");
+  }, 2500);
+}
