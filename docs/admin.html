@@ -2,40 +2,40 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Murugammal Tiffin Center · Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Murugammal Tiffin Center · Admin</title>
 
-  <!-- Same fonts and CSS as main site -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="page-shell">
     <header class="hero">
       <div class="hero__text">
-        <p class="hero__eyebrow">Owner · Admin Console</p>
-        <h1>Murugammal Tiffin Center</h1>
+        <p class="hero__eyebrow">Owner Dashboard</p>
+        <h1>Murugammal Tiffin Center · Admin</h1>
         <p class="hero__description">
-          Internal panel for managing menu, prices and viewing monthly sales.
+          Manage menu, track sales, and review preorders. This page is only for you.
         </p>
       </div>
       <div class="hero__badge">
-        <span>Private area</span>
-        <strong>Staff only</strong>
+        <span>Private</span>
+        <strong>Admin Only</strong>
         <span>Do not share this link</span>
       </div>
     </header>
 
     <section class="admin-area">
       <div class="admin-login" id="admin-login">
-        <h2>Admin Console</h2>
-        <p>Menu updates, preorder log, and monthly sales are protected.</p>
+        <h2>Admin Login</h2>
+        <p>Enter the admin password to unlock menu & reports.</p>
         <label for="admin-password">Password</label>
         <input type="password" id="admin-password" placeholder="Enter admin password">
         <button class="btn filled" id="admin-login-btn">Unlock dashboard</button>
-        <p class="hint">Forgot the password? Ask Murugammal Tiffin Center owner.</p>
+        <p class="hint">If you forget the password, change it in script.js file.</p>
       </div>
 
       <div class="admin-dashboard hidden" id="admin-dashboard">
@@ -58,7 +58,7 @@
                 <input type="number" id="menu-price" min="1" required>
               </div>
               <div class="field">
-                <label for="menu-image">Image URL</label>
+                <label for="menu-image">Image URL (or leave blank)</label>
                 <input type="url" id="menu-image" placeholder="https://...">
               </div>
               <div class="field">
@@ -127,7 +127,6 @@
             </thead>
             <tbody id="report-table-body"></tbody>
           </table>
-          <p class="hint">Need CSV export? This layout is ready for future enhancement.</p>
         </section>
       </div>
     </section>
@@ -135,8 +134,6 @@
 
   <div id="toast" role="status" aria-live="assertive"></div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"
-          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="script.js"></script>
 </body>
 </html>
