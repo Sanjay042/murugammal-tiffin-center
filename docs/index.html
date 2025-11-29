@@ -110,7 +110,7 @@
 
         <!-- ORDER MODE: PAY NOW vs PREORDER -->
         <div class="order-mode">
-          <p>Choose how you’d like to finish the order:</p>
+          <p>Choose how you'd like to finish the order:</p>
           <label>
             <input type="radio" name="order-mode" value="pay-now" checked>
             Pay now (UPI QR)
@@ -129,18 +129,21 @@
             <p>Generate a QR with the current total and pay instantly. Show the confirmation when you arrive.</p>
             <div class="qr-box">
               <canvas id="qr-canvas" aria-hidden="true"></canvas>
-              <p id="qr-note">QR will appear after you click “Generate QR”.</p>
+              <p id="qr-note">QR will appear after you click "Generate QR".</p>
             </div>
             <div class="mode-actions">
               <button class="btn filled" id="generate-qr-btn">Generate QR</button>
               <button class="btn outline" id="payment-done-btn">Payment Received</button>
+              <button class="btn ghost" id="upi-pay-btn" style="display:none;">
+                Pay with UPI app (GPay / PhonePe)
+              </button>
             </div>
           </div>
 
           <!-- PREORDER -->
           <div id="preorder-panel" class="mode-panel" style="display:none;">
             <h3>Preorder & Pick Up / Delivery</h3>
-            <p>We’ll prep your order now. Pay when you reach the shop or on delivery.</p>
+            <p>We'll prep your order now. Pay when you reach the shop or on delivery.</p>
             <form id="preorder-form">
               <div class="field">
                 <label for="preorder-name">Your name</label>
