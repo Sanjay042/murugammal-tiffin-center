@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MTC Admin · Murugammal Tiffin Center</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero__text">
+        <p class="hero__eyebrow">Internal · Admin Only</p>
+        <h1>Murugammal Tiffin Center Admin</h1>
+        <p class="hero__description">
+          Manage menu items, prices, and view monthly sales & preorders.
+        </p>
+      </div>
+      <div class="hero__badge">
+        <span>Owner access</span>
+        <strong>Admin Console</strong>
+        <span>Keep this link private</span>
+      </div>
+    </header>
+
+    <section class="admin-area">
+      <div class="admin-login" id="admin-login">
+        <h2>Admin Console</h2>
+        <p>Menu updates, preorder log, and monthly sales are protected.</p>
+        <label for="admin-password">Password</label>
+        <input type="password" id="admin-password" placeholder="Enter admin password">
+        <button class="btn filled" id="admin-login-btn">Unlock dashboard</button>
+        <p class="hint">Forgot the password? Ask Murugammal Tiffin Center owner.</p>
+      </div>
+
+      <div class="admin-dashboard hidden" id="admin-dashboard">
+        <div class="dashboard-header">
+          <h2>Dashboard</h2>
+          <button class="btn ghost" id="admin-logout-btn">Log out</button>
+        </div>
+
+        <div class="dashboard-grid">
+          <section class="card">
+            <h3>Menu Manager</h3>
+            <form id="menu-form">
+              <input type="hidden" id="menu-id">
+              <div class="field">
+                <label for="menu-name">Item name</label>
+                <input type="text" id="menu-name" required>
+              </div>
+              <div class="field">
+                <label for="menu-price">Price (₹)</label>
+                <input type="number" id="menu-price" min="1" required>
+              </div>
+              <div class="field">
+                <label for="menu-image">Image URL</label>
+                <input type="url" id="menu-image" placeholder="https://...">
+              </div>
+              <div class="field">
+                <label for="menu-description">Short description</label>
+                <textarea id="menu-description" rows="2"></textarea>
+              </div>
+              <button class="btn filled wide" type="submit" id="menu-submit-btn">Add item</button>
+              <button class="btn ghost wide" type="button" id="menu-cancel-btn">Cancel edit</button>
+            </form>
+          </section>
+
+          <section class="card">
+            <h3>Current Menu</h3>
+            <table class="manage-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Price</th>
+                  <th>Updated</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="manage-table-body"></tbody>
+            </table>
+          </section>
+        </div>
+
+        <section class="card">
+          <h3>Monthly Sales & Preorders</h3>
+          <div class="report-controls">
+            <label>
+              Month
+              <input type="month" id="report-month">
+            </label>
+            <div>
+              <button class="btn outline" id="refresh-report-btn">Refresh</button>
+              <button class="btn ghost" id="print-report-btn">Print report</button>
+            </div>
+          </div>
+          <div class="report-stats">
+            <div>
+              <p>Total orders</p>
+              <strong id="report-orders">0</strong>
+            </div>
+            <div>
+              <p>Total revenue</p>
+              <strong id="report-revenue">₹0</strong>
+            </div>
+            <div>
+              <p>Delivery fees</p>
+              <strong id="report-delivery">₹0</strong>
+            </div>
+            <div>
+              <p>Pay-now vs Preorder</p>
+              <strong id="report-mode-breakdown">0 / 0</strong>
+            </div>
+          </div>
+          <table class="reports-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Mode / Type</th>
+                <th>Items</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="report-table-body"></tbody>
+          </table>
+          <p class="hint">Need CSV export? This layout is ready for future enhancement.</p>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast" role="status" aria-live="assertive"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="script.js"></script>
+</body>
+</html>

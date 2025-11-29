@@ -470,7 +470,8 @@ function syncModePanels() {
 
   // Pay now panel only when: Pay-now + Spot pickup
   elements.payNowPanel.style.display =
-    mode === "pay-now" && orderType === "pickup" ? "block" : "none";
+  mode === "pay-now" ? "block" : "none";
+
 
   // Preorder panel only when preorder is selected
   elements.preorderPanel.style.display =
