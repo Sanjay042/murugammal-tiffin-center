@@ -78,7 +78,9 @@ const state = {
 
 const elements = {};
 let qrInstance;
-let lastUpiUrl = "";
+let lastUpiAmount = 0;
+let lastOrderId = "";
+
 
 // ========================= INIT =========================
 document.addEventListener("DOMContentLoaded", () => {
@@ -126,9 +128,16 @@ function cacheDom() {
 
   elements.qrCanvas = document.getElementById("qr-canvas");
   elements.qrNote = document.getElementById("qr-note");
-  elements.generateQRBtn = document.getElementById("generate-qr-btn");
+  elements.generateQrBtn = document.getElementById("generate-qr-btn");
   elements.paymentDoneBtn = document.getElementById("payment-done-btn");
-  elements.upiPayBtn = document.getElementById("upi-pay-btn");
+
+// New UPI buttons
+elements.upiApps = document.getElementById("upi-apps");
+elements.payGPayBtn = document.getElementById("pay-gpay-btn");
+elements.payPhonePeBtn = document.getElementById("pay-phonepe-btn");
+elements.payPaytmBtn = document.getElementById("pay-paytm-btn");
+elements.payAnyUpiBtn = document.getElementById("pay-anyupi-btn");
+
 
   elements.clearCartBtn = document.getElementById("clear-cart-btn");
   elements.printBillBtn = document.getElementById("print-bill-btn");
@@ -274,14 +283,18 @@ function attachEvents() {
       r.addEventListener("change", syncModePanels)
     );
   }
-
-  if (elements.generateQRBtn) {
-    elements.generateQRBtn.addEventListener("click", handleGenerateQR);
-  }
-  if (elements.paymentDoneBtn) {
-    elements.paymentDoneBtn.addEventListener("click", () =>
-      finalizeOrder("pay-now")
-    );
+if (elements.payGPayBtn) {
+  elements.payGPayBtn.addEventListener("click", () => openUpiApp("gpay"));
+}
+if (elements.payPhonePeBtn) {
+  elements.payPhonePeBtn.addEventListener("click", () => openUpiApp("phonepe"));
+}
+if (elements.payPaytmBtn) {
+  elements.payPaytmBtn.addEventListener("click", () => openUpiApp("paytm"));
+}
+if (elements.payAnyUpiBtn) {
+  elements.payAnyUpiBtn.addEventListener("click", () => openUpiApp("any"));
+}
   }
   if (elements.upiPayBtn) {
     elements.upiPayBtn.addEventListener("click", handleUpiPay);
@@ -330,41 +343,45 @@ function initializeQR() {
 }
 
 function handleGenerateQR() {
-  if (!ensureCartNotEmpty()) return;
-
-  const subtotal = calculateSubtotal();
-  const isDelivery = currentOrderType() === "delivery";
-  const deliveryFee = isDelivery ? calculateDeliveryFee() : 0;
-  const amount = subtotal + deliveryFee;
-
-  if (!amount) {
-    notify("Amount is zero.");
+  if (cart.length === 0) {
+    notify("Your cart is empty. Add items first.");
     return;
   }
 
-  const orderId = generateId("order");
+  const amount = parseFloat(
+    elements.grandAmount.textContent.replace("₹", "").trim()
+  );
+  if (!amount || isNaN(amount)) {
+    notify("Amount is invalid.");
+    return;
+  }
+
+  const orderId = `MTF-${Date.now()}`;
+
+  // Save for app buttons
+  lastUpiAmount = amount;
+  lastOrderId = orderId;
+
+  // Generic UPI string for QR
   const upiString = `upi://pay?pa=${encodeURIComponent(
     UPI_ID
   )}&pn=${encodeURIComponent(
     UPI_NAME
   )}&am=${amount}&tn=${encodeURIComponent(orderId)}`;
 
-  lastUpiUrl = upiString;
+  qrInstance.value = upiString;
+  elements.qrNote.textContent = `Scan this QR to pay ${formatCurrency(
+    amount
+  )}. Reference: ${orderId}`;
 
-  if (qrInstance) {
-    qrInstance.value = upiString;
-  }
-  if (elements.qrNote) {
-    elements.qrNote.textContent = `Scan this QR to pay ${formatCurrency(
-      amount
-    )}. Reference: ${orderId}`;
-  }
-  if (elements.upiPayBtn) {
-    elements.upiPayBtn.style.display = "inline-flex";
+  // Show the UPI app buttons row
+  if (elements.upiApps) {
+    elements.upiApps.style.display = "block";
   }
 
-  notify("QR code ready. You can scan or tap UPI app button.");
+  notify("QR code ready. You can scan or use a UPI app button.");
 }
+
 
 function handleUpiPay() {
   if (!lastUpiUrl) {
@@ -777,6 +794,42 @@ function startMenuEdit(id) {
   if (elements.menuDescription) elements.menuDescription.value = item.description;
   if (elements.menuSubmitBtn) elements.menuSubmitBtn.textContent = "Update item";
   if (elements.menuCancelBtn) elements.menuCancelBtn.style.display = "block";
+}
+function buildUpiParams(amount, orderId) {
+  return `pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(
+    UPI_NAME
+  )}&am=${encodeURIComponent(amount)}&tn=${encodeURIComponent(orderId)}`;
+}
+
+function openUpiApp(app) {
+  if (!lastUpiAmount || !lastOrderId) {
+    notify("Please generate the QR first.");
+    return;
+  }
+
+  const params = buildUpiParams(lastUpiAmount, lastOrderId);
+  let url = "";
+
+  switch (app) {
+    case "gpay":
+      // Google Pay
+      url = `tez://upi/pay?${params}`;
+      break;
+    case "phonepe":
+      // PhonePe
+      url = `phonepe://upi/pay?${params}`;
+      break;
+    case "paytm":
+      // Paytm
+      url = `paytmmp://pay?${params}`;
+      break;
+    default:
+      // Other UPI apps (will open your default UPI like BHIM / WhatsApp Pay etc.)
+      url = `upi://pay?${params}`;
+  }
+
+  // Try to open the app
+  window.location.href = url;
 }
 
 function resetMenuForm() {
