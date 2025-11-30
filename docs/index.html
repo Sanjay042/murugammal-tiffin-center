@@ -1,13 +1,9 @@
 <!DOCTYPE html>
-<html lang="ta">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>முருகம்மாள் காலை உணவகம் · Murugammal Tiffin Center</title>
-
-  <!-- Icon + PWA -->
-  <link rel="icon" type="image/png" href="images/mtc-logo-512.png">
-  <link rel="manifest" href="manifest.json">
 
   <!-- Attractive fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,43 +15,35 @@
 <body>
   <div class="page-shell">
     <header class="hero">
-      <div class="hero__text">
-        <p class="hero__eyebrow">SINCE 2010 · AUTHENTIC TIFFIN HOUSE</p>
-
-        <!-- Logo + names -->
-        <div style="display:flex; align-items:center; gap:16px; margin-bottom:8px;">
-          <img src="images/mtc-logo-512.png" alt="முருகம்மாள் காலை உணவகம் லோகோ" class="hero__logo" style="width:64px;height:64px;border-radius:50%;object-fit:cover;">
-          <div>
-            <h1 style="margin:0;">முருகம்மாள் காலை உணவகம்</h1>
-            <p style="margin:2px 0 0;font-weight:500;color:#7b5a42;">Murugammal Tiffin Center</p>
-          </div>
-        </div>
-
-        <p class="hero__description">
-          Freshly made South Indian breakfast – order online, pay with UPI, and pick up or get delivery within 1 km.
-        </p>
-
-        <div class="hero__meta">
-          <div>
-            <p class="meta-label">LOCATION</p>
-            <p>833C+39F, Palacode, Tamil Nadu 636808</p>
-            <button class="btn ghost" onclick="window.open('https://maps.google.com/?q=833C+39F+Palacode+Tamil+Nadu+636808','_blank')">
-              📍 View on Maps
-            </button>
-          </div>
-          <div>
-            <p class="meta-label">ORDER BY PHONE</p>
-            <p>Main: <a href="tel:8531030451">85310 30451</a></p>
-            <p>Alt: <a href="tel:9025959797">90259 59797</a></p>
-            <p class="meta-note">Delivery under 1 km only — charges based on distance.</p>
-          </div>
+      <!-- Brand header with big logo + Tamil name -->
+      <div class="brand-header">
+        <!-- 👇 IMPORTANT: put your logo file in docs/images and name it mtc-logo-512.png
+             OR change the src below to your real logo filename -->
+        <img src="images/mtc-logo-512.png" class="brand-logo" alt="Murugammal Tiffin Center Logo">
+        <div>
+          <h1 class="brand-title">முருகம்மாள் காலை உணவகம்</h1>
+          <p class="brand-subtitle">Murugammal Tiffin Center · Since 2010</p>
         </div>
       </div>
 
-      <div class="hero__badge">
-        <span>Serving Palacode</span>
-        <strong>Low-cost meals</strong>
-        <span>Fast delivery · Preorder ready</span>
+      <p class="hero__description">
+        Fresh, hot South Indian breakfast — order online, choose delivery or pickup, and pay via UPI.
+      </p>
+
+      <div class="hero__meta">
+        <div>
+          <p class="meta-label">Location</p>
+          <p>833C+39F, Palacode, Tamil Nadu 636808</p>
+          <button class="btn ghost" onclick="window.open('https://maps.google.com/?q=833C+39F+Palacode+Tamil+Nadu+636808','_blank')">
+            📍 View on Maps
+          </button>
+        </div>
+        <div>
+          <p class="meta-label">Order by Phone</p>
+          <p>Main: <a href="tel:8531030451">85310 30451</a></p>
+          <p>Alt: <a href="tel:9025959797">90259 59797</a></p>
+          <p class="meta-note">Delivery under 1 km only — charges based on distance.</p>
+        </div>
       </div>
     </header>
 
@@ -63,7 +51,7 @@
       <!-- MENU -->
       <section class="menu-panel">
         <div class="panel-heading">
-          <h2>Today’s Menu</h2>
+          <h2>Menu</h2>
           <p>Tap “Add to cart” to start your order.</p>
         </div>
         <div class="menu-grid" id="menu-grid" aria-live="polite"></div>
@@ -75,19 +63,6 @@
           <h2>Your Cart</h2>
           <span id="cart-count-pill">0 items</span>
         </div>
-
-        <!-- CUSTOMER DETAILS -->
-        <section class="customer-details">
-          <h3 style="font-size:1rem;margin-bottom:8px;">Your details</h3>
-          <div class="field">
-            <label for="customer-name">Name (required)</label>
-            <input type="text" id="customer-name" placeholder="e.g. Sanjay">
-          </div>
-          <div class="field">
-            <label for="customer-phone">Mobile number (required)</label>
-            <input type="tel" id="customer-phone" placeholder="10-digit mobile">
-          </div>
-        </section>
 
         <div class="cart-table-wrapper">
           <table>
@@ -129,6 +104,21 @@
           <input type="text" id="delivery-address" placeholder="House / Street / Landmark">
         </div>
 
+        <!-- CUSTOMER INFO (for WhatsApp) -->
+        <div class="customer-info">
+          <p>Tell us who you are:</p>
+          <div class="field-row">
+            <div class="field">
+              <label for="customer-name">Your name</label>
+              <input type="text" id="customer-name" placeholder="e.g. Sanjay">
+            </div>
+            <div class="field">
+              <label for="customer-phone">Mobile number</label>
+              <input type="tel" id="customer-phone" placeholder="e.g. 9XXXXXXXXX">
+            </div>
+          </div>
+        </div>
+
         <!-- TOTALS -->
         <div class="totals">
           <div><span>Subtotal</span><strong id="subtotal-amount">₹0</strong></div>
@@ -138,14 +128,14 @@
 
         <!-- ORDER MODE: PAY NOW vs PREORDER -->
         <div class="order-mode">
-          <p>How do you want to finish?</p>
+          <p>How do you want to pay?</p>
           <label>
             <input type="radio" name="order-mode" value="pay-now" checked>
-            Pay now (UPI QR)
+            Pay now (UPI)
           </label>
           <label>
             <input type="radio" name="order-mode" value="preorder">
-            Preorder & pay at shop / delivery
+            Pay at shop / on delivery
           </label>
         </div>
 
@@ -154,42 +144,53 @@
           <!-- PAY NOW -->
           <div id="pay-now-panel" class="mode-panel">
             <h3>UPI Payment</h3>
-            <p>1) Generate QR, 2) Pay using any UPI app, 3) Tap “Place order”.</p>
+            <p>Generate a QR and pay using GPay, PhonePe, Paytm or any UPI app.</p>
             <div class="qr-box">
               <canvas id="qr-canvas" aria-hidden="true"></canvas>
               <p id="qr-note">QR will appear after you click “Generate QR”.</p>
             </div>
-
             <div class="mode-actions">
               <button class="btn filled" id="generate-qr-btn">Generate QR</button>
             </div>
 
             <!-- UPI app buttons -->
-            <div class="upi-apps" id="upi-apps" style="display:none; margin-top:10px;">
-              <p class="hint">Or tap your UPI app:</p>
-              <div class="upi-buttons" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
+            <div class="upi-apps" id="upi-apps" style="display:none;">
+              <p class="hint">Tap your UPI app to continue payment:</p>
+              <div class="upi-buttons">
                 <button class="btn outline" id="pay-gpay-btn">Google Pay</button>
                 <button class="btn outline" id="pay-phonepe-btn">PhonePe</button>
                 <button class="btn outline" id="pay-paytm-btn">Paytm</button>
                 <button class="btn ghost" id="pay-anyupi-btn">Other UPI app</button>
               </div>
             </div>
+
+            <!-- WhatsApp order -->
+            <div class="mode-actions" style="margin-top:10px;">
+              <button class="btn outline" id="whatsapp-order-btn">Send order on WhatsApp</button>
+            </div>
           </div>
 
           <!-- PREORDER -->
           <div id="preorder-panel" class="mode-panel" style="display:none;">
-            <h3>Preorder details</h3>
-            <p>We’ll prep your order now. Pay at counter or on delivery.</p>
-            <form id="preorder-form">
-              <div class="field">
-                <label for="preorder-time">Approx. time you’ll reach</label>
-                <input type="time" id="preorder-time">
-              </div>
-              <div class="field">
-                <label for="preorder-notes">Notes</label>
-                <textarea id="preorder-notes" rows="2" placeholder="Any special request?"></textarea>
-              </div>
-            </form>
+            <h3>Preorder (Pay later)</h3>
+            <p>We will prepare your food. You can pay when you reach the shop or when we deliver.</p>
+
+            <div class="field">
+              <label for="preorder-time">Approx. time</label>
+              <input type="time" id="preorder-time">
+            </div>
+            <div class="field">
+              <label for="preorder-notes">Notes</label>
+              <textarea id="preorder-notes" rows="2" placeholder="Any special request? (less oil, extra chutney, etc.)"></textarea>
+            </div>
+
+            <button class="btn filled wide" id="preorder-whatsapp-btn">
+              Send preorder on WhatsApp
+            </button>
+
+            <p class="hint" style="margin-top:8px;">
+              Need help? Call <a href="tel:8531030451">85310 30451</a> or <a href="tel:9025959797">90259 59797</a>.
+            </p>
           </div>
         </div>
 
@@ -197,7 +198,6 @@
         <div class="cart-actions">
           <button class="btn ghost" id="clear-cart-btn">Clear cart</button>
           <button class="btn outline" id="print-bill-btn">Print bill</button>
-          <button class="btn filled" id="place-order-btn" style="flex:1;">Place order</button>
         </div>
       </section>
     </main>
@@ -209,7 +209,6 @@
     </section>
   </div>
 
-  <!-- Toast -->
   <div id="toast" role="status" aria-live="assertive"></div>
 
   <!-- QR library + main script -->
