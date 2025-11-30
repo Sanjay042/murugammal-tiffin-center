@@ -1,0 +1,18 @@
+{
+  "name": "Murugammal Tiffin Center",
+  "short_name": "MTC Tiffin",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#c95d2d",
+  "background_color": "#f5f2ef",
+  "icons": [
+    {
+      "src": "images/mtc-logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -11,11 +11,19 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#c95d2d">
 </head>
 <body>
   <div class="page-shell">
     <header class="hero">
       <div class="hero__text">
+        <!-- LOGO -->
+        <div class="hero__logo">
+          <!-- Put your logo image as docs/images/logo.png -->
+          <img src="images/logo.png" alt="Murugammal Tiffin Center logo">
+        </div>
+
         <p class="hero__eyebrow">Since 2010 · Authentic Tiffin House</p>
         <h1>Murugammal Tiffin Center</h1>
         <p class="hero__description">
@@ -101,15 +109,16 @@
           <input type="text" id="delivery-address" placeholder="House / Street / Landmark">
         </div>
 
-        <!-- CUSTOMER INFO (for WhatsApp + admin) -->
-        <div class="customer-info" style="margin:12px 0;">
+        <!-- CUSTOMER DETAILS (used for both Pay-now & Preorder) -->
+        <div class="customer-details">
+          <h3>Who is ordering?</h3>
           <div class="field">
-            <label for="customer-name">Your name</label>
-            <input type="text" id="customer-name" placeholder="Your name">
+            <label for="customer-name">Name</label>
+            <input type="text" id="customer-name" placeholder="Your full name">
           </div>
           <div class="field">
-            <label for="customer-mobile">Mobile number (optional)</label>
-            <input type="tel" id="customer-mobile" placeholder="10-digit mobile">
+            <label for="customer-phone">Mobile number</label>
+            <input type="tel" id="customer-phone" placeholder="10-digit mobile number">
           </div>
         </div>
 
@@ -145,17 +154,16 @@
             </div>
             <div class="mode-actions">
               <button class="btn filled" id="generate-qr-btn">Generate QR</button>
-              <button class="btn outline" id="payment-done-btn">Payment Received</button>
             </div>
 
-            <!-- UPI app style buttons (all use same UPI link) -->
+            <!-- UPI app buttons -->
             <div class="upi-apps" id="upi-apps" style="display:none; margin-top:10px;">
-              <p class="hint">Or pay using your UPI app:</p>
-              <div class="upi-buttons" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
+              <p class="hint">Then choose your UPI app:</p>
+              <div class="upi-buttons">
                 <button class="btn outline" id="pay-gpay-btn">Google Pay</button>
                 <button class="btn outline" id="pay-phonepe-btn">PhonePe</button>
                 <button class="btn outline" id="pay-paytm-btn">Paytm</button>
-                <button class="btn ghost" id="pay-anyupi-btn">Other UPI app</button>
+                <button class="btn ghost" id="pay-anyupi-btn">Any UPI app</button>
               </div>
             </div>
           </div>
@@ -165,14 +173,6 @@
             <h3>Preorder & Pick Up / Delivery</h3>
             <p>We’ll prep your order now. Pay when you reach the shop or on delivery.</p>
             <form id="preorder-form">
-              <div class="field">
-                <label for="preorder-name">Your name</label>
-                <input type="text" id="preorder-name" placeholder="Optional">
-              </div>
-              <div class="field">
-                <label for="preorder-contact">Contact number</label>
-                <input type="tel" id="preorder-contact" placeholder="e.g. 9XXXXXXXXX">
-              </div>
               <div class="field">
                 <label for="preorder-time">When will you arrive?</label>
                 <input type="time" id="preorder-time">
@@ -208,5 +208,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"
           crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="script.js"></script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js')
+          .catch(err => console.error('SW registration failed', err));
+      });
+    }
+  </script>
 </body>
 </html>
+
