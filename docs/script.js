@@ -1,327 +1,348 @@
-// ============================================================================
-// Murugammal Tiffin Center – Customer Ordering Page
-// Menu → Cart → UPI QR → Pay with any UPI app (GPay / PhonePe / Paytm / etc.)
-// ============================================================================
-
-// ---------- CONFIG ----------
+// ================= CONFIG =================
 const UPI_ID = "sanjaychinnavan42-2@okicici";
 const UPI_NAME = "Murugammal Tiffin Center";
+// Your WhatsApp with country code (India = 91)
+const OWNER_WHATSAPP = "918531030451";
 
-// ---------- MENU DATA (you can edit prices/text here) ----------
-const MENU_ITEMS = [
+// Simple fixed menu (you can change prices/images here)
+const MENU = [
   {
     id: "idly",
-    name: "Plain Idly (1 pc)",
+    name: "Plain Idly",
     price: 2.5,
-    description: "Steamed rice cakes with coconut & red chutney.",
-    image: "images/idly1.jpg",
+    description: "Steamed rice cakes with chutneys.",
+    image: "images/idly1.jpg"
   },
   {
     id: "dosa",
     name: "Crispy Dosa",
     price: 8,
-    description: "Golden dosa with sambar and chutneys.",
-    image: "images/dosa1.jpg",
+    description: "Golden dosa with sambar & chutneys.",
+    image: "images/dosa1.jpg"
   },
   {
     id: "onion-dosa",
     name: "Onion Dosa",
     price: 12,
-    description: "Dosa with caramelised onion topping.",
-    image: "images/od.jpg",
+    description: "Caramelised onion topping, extra crunch.",
+    image: "images/od.jpg"
   },
   {
-    id: "full-boil",
-    name: "Pepper Egg (Full Boil)",
+    id: "pepper-egg",
+    name: "Pepper Egg",
     price: 10,
     description: "Boiled egg with pepper & salt.",
-    image: "images/boil1.jpg",
+    image: "images/boil1.jpg"
   },
   {
     id: "omelette",
     name: "Masala Omelette",
     price: 15,
-    description: "Two-egg omelette with onion & herbs.",
-    image: "images/om123.jpg",
+    description: "Two-egg omelette with herbs & onion.",
+    image: "images/om123.jpg"
   },
   {
     id: "half-boil",
-    name: "Half Boil Egg",
+    name: "Half Boil",
     price: 10,
     description: "Soft-boiled egg with pepper & salt.",
-    image: "images/halfboil.jpg",
+    image: "images/halfboil.jpg"
   },
   {
     id: "egg-dosa",
     name: "Egg Dosa",
     price: 15,
-    description: "Crispy dosa layered with beaten egg.",
-    image: "images/eggdosa1.jpg",
-  },
+    description: "Protein-rich dosa with beaten egg layer.",
+    image: "images/eggdosa1.jpg"
+  }
 ];
 
-// ---------- STATE ----------
+// Delivery fee rules (meters)
+const DELIVERY_RULES = [
+  { max: 100, fee: 10 },
+  { max: 500, fee: 20 },
+  { max: 1000, fee: 30 },
+  { max: Infinity, fee: 40 },
+];
+
+// ================= STATE =================
 let cart = [];
 let qrInstance = null;
-let lastUpiUrl = "";
+let currentUpiUrl = "";
 
-// ---------- DOM CACHE ----------
-const el = {};
+const el = {}; // DOM elements
 
+// ================= INIT =================
+document.addEventListener("DOMContentLoaded", () => {
+  cacheDom();
+  attachEvents();
+  renderMenu();
+  updateCartUI();
+  handleOrderModeChange();
+  handleOrderTypeChange();
+
+  if (el.qrCanvas) {
+    qrInstance = new QRious({
+      element: el.qrCanvas,
+      size: 200,
+    });
+  }
+});
+
+// ================= DOM CACHE =================
 function cacheDom() {
-  // Menu & cart
   el.menuGrid = document.getElementById("menu-grid");
   el.cartTableBody = document.getElementById("cart-table-body");
-  el.cartCount = document.getElementById("cart-count-pill");
+  el.cartCountPill = document.getElementById("cart-count-pill");
 
-  // Order type (pickup / delivery)
   el.orderTypeRadios = document.querySelectorAll('input[name="order-type"]');
   el.deliverySection = document.getElementById("delivery-section");
   el.deliveryDistance = document.getElementById("delivery-distance");
   el.deliveryAddress = document.getElementById("delivery-address");
 
-  // Totals
   el.subtotalAmount = document.getElementById("subtotal-amount");
   el.deliveryAmount = document.getElementById("delivery-amount");
   el.grandAmount = document.getElementById("grand-amount");
 
-  // Order mode (pay-now / preorder)
+  el.customerName = document.getElementById("customer-name");
+  el.customerMobile = document.getElementById("customer-mobile");
+
   el.orderModeRadios = document.querySelectorAll('input[name="order-mode"]');
   el.payNowPanel = document.getElementById("pay-now-panel");
   el.preorderPanel = document.getElementById("preorder-panel");
 
-  // QR & payment
   el.qrCanvas = document.getElementById("qr-canvas");
   el.qrNote = document.getElementById("qr-note");
   el.generateQrBtn = document.getElementById("generate-qr-btn");
   el.paymentDoneBtn = document.getElementById("payment-done-btn");
-  el.upiPayBtn = document.getElementById("upi-pay-btn");
 
-  // New UPI app buttons
-  el.upiAppsBox = document.getElementById("upi-apps");
-  el.payGpayBtn = document.getElementById("pay-gpay-btn");
+  el.upiApps = document.getElementById("upi-apps");
+  el.payGPayBtn = document.getElementById("pay-gpay-btn");
   el.payPhonePeBtn = document.getElementById("pay-phonepe-btn");
   el.payPaytmBtn = document.getElementById("pay-paytm-btn");
   el.payAnyUpiBtn = document.getElementById("pay-anyupi-btn");
 
-  // Preorder form
   el.preorderForm = document.getElementById("preorder-form");
   el.preorderName = document.getElementById("preorder-name");
   el.preorderContact = document.getElementById("preorder-contact");
   el.preorderTime = document.getElementById("preorder-time");
   el.preorderNotes = document.getElementById("preorder-notes");
 
-  // Cart actions
   el.clearCartBtn = document.getElementById("clear-cart-btn");
   el.printBillBtn = document.getElementById("print-bill-btn");
 
-  // Toast
   el.toast = document.getElementById("toast");
 }
 
-// ---------- UTILITIES ----------
-function formatCurrency(amount) {
-  const num = Number(amount) || 0;
-  return num % 1 === 0 ? `₹${num.toFixed(0)}` : `₹${num.toFixed(1)}`;
-}
-
-function notify(msg) {
-  if (!el.toast) return;
-  el.toast.textContent = msg;
-  el.toast.classList.add("show");
-  clearTimeout(el.toast._timeout);
-  el.toast._timeout = setTimeout(() => {
-    el.toast.classList.remove("show");
-  }, 2200);
-}
-
-function getOrderType() {
-  const checked = document.querySelector('input[name="order-type"]:checked');
-  return checked ? checked.value : "pickup";
-}
-
-function getOrderMode() {
-  const checked = document.querySelector('input[name="order-mode"]:checked');
-  return checked ? checked.value : "pay-now";
-}
-
-// ---------- MENU RENDER ----------
-function renderMenu() {
-  if (!el.menuGrid) return;
-
-  el.menuGrid.innerHTML = MENU_ITEMS.map(
-    (item) => `
-      <article class="menu-card">
-        <img src="${item.image}" alt="${item.name}">
-        <div class="content">
-          <div class="meta">
-            <strong>${item.name}</strong>
-            <span>${formatCurrency(item.price)}</span>
-          </div>
-          <p>${item.description || ""}</p>
-          <button class="btn filled" data-add-id="${item.id}">
-            Add to cart
-          </button>
-        </div>
-      </article>
-    `
-  ).join("");
-
-  // Add-to-cart via event delegation
+// ================= EVENTS =================
+function attachEvents() {
+  // Menu click → add to cart
   el.menuGrid.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-add-id]");
     if (!btn) return;
     const id = btn.getAttribute("data-add-id");
-    const item = MENU_ITEMS.find((m) => m.id === id);
-    if (!item) return;
-    addToCart(item);
+    const dish = MENU.find((d) => d.id === id);
+    if (dish) addToCart(dish);
   });
+
+  // Order type
+  el.orderTypeRadios.forEach((r) =>
+    r.addEventListener("change", () => {
+      handleOrderTypeChange();
+      updateTotals();
+    })
+  );
+
+  // Delivery distance
+  el.deliveryDistance.addEventListener("input", updateTotals);
+
+  // Order mode
+  el.orderModeRadios.forEach((r) =>
+    r.addEventListener("change", handleOrderModeChange)
+  );
+
+  // Cart
+  el.cartTableBody.addEventListener("change", (e) => {
+    const input = e.target;
+    if (!input.matches(".qty-input")) return;
+    const tr = input.closest("tr");
+    const id = tr?.getAttribute("data-id");
+    const qty = Math.max(1, Number(input.value) || 1);
+    updateCartQuantity(id, qty);
+  });
+
+  el.cartTableBody.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-remove-id]");
+    if (!btn) return;
+    const id = btn.getAttribute("data-remove-id");
+    removeFromCart(id);
+  });
+
+  el.clearCartBtn.addEventListener("click", () => {
+    if (!cart.length) {
+      notify("Cart is already empty.");
+      return;
+    }
+    if (confirm("Clear the entire cart?")) {
+      cart = [];
+      updateCartUI();
+      notify("Cart cleared.");
+    }
+  });
+
+  el.printBillBtn.addEventListener("click", printBill);
+
+  // Payment
+  el.generateQrBtn.addEventListener("click", handleGenerateQR);
+  el.paymentDoneBtn.addEventListener("click", handlePaymentDone);
+
+  // UPI app buttons (all same handler)
+  [el.payGPayBtn, el.payPhonePeBtn, el.payPaytmBtn, el.payAnyUpiBtn]
+    .filter(Boolean)
+    .forEach((btn) => btn.addEventListener("click", handleUpiAppPay));
+
+  // Preorder form
+  el.preorderForm.addEventListener("submit", handlePreorderSubmit);
 }
 
-// ---------- CART ----------
-function addToCart(menuItem) {
-  const existing = cart.find((c) => c.id === menuItem.id);
-  if (existing) {
-    existing.qty += 1;
-  } else {
-    cart.push({
-      id: menuItem.id,
-      name: menuItem.name,
-      price: menuItem.price,
-      qty: 1,
-    });
-  }
-  notify(`${menuItem.name} added to cart.`);
+// ================= HELPER UTILS =================
+const formatCurrency = (amount) => {
+  const num = Number(amount) || 0;
+  return num % 1 === 0 ? `₹${num.toFixed(0)}` : `₹${num.toFixed(1)}`;
+};
+
+function notify(message) {
+  if (!el.toast) return;
+  el.toast.textContent = message;
+  el.toast.classList.add("show");
+  clearTimeout(el.toast._timer);
+  el.toast._timer = setTimeout(
+    () => el.toast.classList.remove("show"),
+    2500
+  );
+}
+
+function getSelectedOrderType() {
+  const checked = document.querySelector('input[name="order-type"]:checked');
+  return checked ? checked.value : "pickup";
+}
+
+function getSelectedOrderMode() {
+  const checked = document.querySelector('input[name="order-mode"]:checked');
+  return checked ? checked.value : "pay-now";
+}
+
+// ================= MENU RENDER =================
+function renderMenu() {
+  el.menuGrid.innerHTML = MENU.map((item) => `
+    <article class="menu-card">
+      <img src="${item.image}" alt="${item.name}">
+      <div class="content">
+        <div class="meta">
+          <strong>${item.name}</strong>
+          <span>${formatCurrency(item.price)}</span>
+        </div>
+        <p>${item.description}</p>
+        <button class="btn filled" data-add-id="${item.id}">Add to cart</button>
+      </div>
+    </article>
+  `).join("");
+}
+
+// ================= CART LOGIC =================
+function addToCart(dish) {
+  const existing = cart.find((i) => i.id === dish.id);
+  if (existing) existing.qty += 1;
+  else cart.push({ id: dish.id, name: dish.name, price: dish.price, qty: 1 });
+
+  updateCartUI();
+  notify(`${dish.name} added to cart.`);
+}
+
+function updateCartQuantity(id, qty) {
+  const item = cart.find((i) => i.id === id);
+  if (!item) return;
+  item.qty = qty;
   updateCartUI();
 }
 
 function removeFromCart(id) {
-  cart = cart.filter((item) => item.id !== id);
-  updateCartUI();
-}
-
-function updateCartQty(id, newQty) {
-  const item = cart.find((c) => c.id === id);
-  if (!item) return;
-  const val = Math.max(1, Number(newQty) || 1);
-  item.qty = val;
-  updateCartUI();
-}
-
-function clearCart() {
-  if (!cart.length) {
-    notify("Cart is already empty.");
-    return;
-  }
-  if (!confirm("Clear all items from the cart?")) return;
-  cart = [];
+  cart = cart.filter((i) => i.id !== id);
   updateCartUI();
 }
 
 function updateCartUI() {
-  if (!el.cartTableBody) return;
-
   if (!cart.length) {
     el.cartTableBody.innerHTML =
       '<tr><td colspan="5" class="empty">Cart is empty</td></tr>';
   } else {
-    el.cartTableBody.innerHTML = cart.map(
-      (item) => `
-        <tr data-id="${item.id}">
-          <td>
-            <strong>${item.name}</strong>
-          </td>
-          <td class="num">
-            <input type="number" class="qty-input" min="1" value="${item.qty}">
-          </td>
-          <td class="num">${formatCurrency(item.price)}</td>
-          <td class="num">${formatCurrency(item.price * item.qty)}</td>
-          <td class="num">
-            <button class="btn ghost sm" data-remove>Remove</button>
-          </td>
-        </tr>
-      `
-    ).join("");
+    el.cartTableBody.innerHTML = cart
+      .map(
+        (item) => `
+      <tr data-id="${item.id}">
+        <td>${item.name}</td>
+        <td class="num">
+          <input type="number" min="1" value="${item.qty}" class="qty-input">
+        </td>
+        <td class="num">${formatCurrency(item.price)}</td>
+        <td class="num">${formatCurrency(item.price * item.qty)}</td>
+        <td class="num">
+          <button class="btn ghost sm" data-remove-id="${item.id}">Remove</button>
+        </td>
+      </tr>
+    `
+      )
+      .join("");
   }
 
-  // Cart count pill
-  const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-  if (el.cartCount) {
-    el.cartCount.textContent = totalItems
-      ? `${totalItems} item${totalItems > 1 ? "s" : ""}`
-      : "0 items";
-  }
-
-  // Attach events for qty & remove
-  el.cartTableBody.querySelectorAll(".qty-input").forEach((input) => {
-    input.addEventListener("input", (e) => {
-      const row = e.target.closest("tr");
-      if (!row) return;
-      const id = row.getAttribute("data-id");
-      updateCartQty(id, e.target.value);
-    });
-  });
-
-  el.cartTableBody.querySelectorAll("[data-remove]").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      const row = e.target.closest("tr");
-      if (!row) return;
-      const id = row.getAttribute("data-id");
-      removeFromCart(id);
-    });
-  });
+  const totalItems = cart.reduce((sum, i) => sum + i.qty, 0);
+  el.cartCountPill.textContent = totalItems
+    ? `${totalItems} item${totalItems > 1 ? "s" : ""}`
+    : "0 items";
 
   updateTotals();
 }
 
-// ---------- TOTALS ----------
+// ================= TOTALS =================
 function calculateSubtotal() {
   return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 }
 
-function calculateDelivery(distanceMeters) {
-  if (getOrderType() === "pickup") return 0;
-  const d = Number(distanceMeters) || 0;
-  if (d <= 100) return 10;
-  if (d <= 250) return 20;
-  if (d <= 500) return 30;
-  return 40;
+function calculateDeliveryFee() {
+  if (getSelectedOrderType() === "pickup") return 0;
+  const distance = Math.max(0, Number(el.deliveryDistance.value) || 0);
+  for (const rule of DELIVERY_RULES) {
+    if (distance <= rule.max) return rule.fee;
+  }
+  return 0;
 }
 
 function updateTotals() {
   const subtotal = calculateSubtotal();
-  const distance = el.deliveryDistance ? el.deliveryDistance.value : 0;
-  const delivery = calculateDelivery(distance);
-  const total = subtotal + delivery;
+  const delivery = cart.length ? calculateDeliveryFee() : 0;
+  const grand = subtotal + delivery;
 
-  if (el.subtotalAmount) el.subtotalAmount.textContent = formatCurrency(subtotal);
-  if (el.deliveryAmount) el.deliveryAmount.textContent = formatCurrency(delivery);
-  if (el.grandAmount) el.grandAmount.textContent = formatCurrency(total);
+  el.subtotalAmount.textContent = formatCurrency(subtotal);
+  el.deliveryAmount.textContent = formatCurrency(delivery);
+  el.grandAmount.textContent = formatCurrency(grand);
 }
 
-// ---------- ORDER TYPE & MODE ----------
-function syncOrderType() {
-  const type = getOrderType();
-  if (el.deliverySection) {
-    el.deliverySection.style.display = type === "delivery" ? "block" : "none";
-  }
-  updateTotals();
+// ================= ORDER MODE / TYPE =================
+function handleOrderTypeChange() {
+  const type = getSelectedOrderType();
+  el.deliverySection.style.display = type === "delivery" ? "block" : "none";
 }
 
-function syncOrderMode() {
-  const mode = getOrderMode();
-  if (el.payNowPanel) {
-    el.payNowPanel.style.display = mode === "pay-now" ? "block" : "none";
-  }
-  if (el.preorderPanel) {
-    el.preorderPanel.style.display = mode === "preorder" ? "block" : "none";
-  }
+function handleOrderModeChange() {
+  const mode = getSelectedOrderMode();
+  el.payNowPanel.style.display = mode === "pay-now" ? "block" : "none";
+  el.preorderPanel.style.display = mode === "preorder" ? "block" : "none";
 }
 
-// ---------- PAYMENT: QR + UPI ----------
+// ================= PAYMENT / QR / UPI =================
 function ensureCartNotEmpty() {
   if (!cart.length) {
-    notify("Add at least one item to the cart.");
+    notify("Your cart is empty. Add items first.");
     return false;
   }
   return true;
@@ -329,200 +350,197 @@ function ensureCartNotEmpty() {
 
 function handleGenerateQR() {
   if (!ensureCartNotEmpty()) return;
-
-  const totalText = el.grandAmount.textContent || "₹0";
-  const amount = Number(totalText.replace("₹", "")) || 0;
+  const amount = calculateSubtotal() + calculateDeliveryFee();
   if (!amount) {
     notify("Amount is zero.");
     return;
   }
 
   const orderId = `MTC-${Date.now()}`;
-
-  const upiUrl = `upi://pay?pa=${encodeURIComponent(
+  const upiString = `upi://pay?pa=${encodeURIComponent(
     UPI_ID
   )}&pn=${encodeURIComponent(
     UPI_NAME
   )}&am=${amount}&tn=${encodeURIComponent(orderId)}`;
 
-  lastUpiUrl = upiUrl;
+  currentUpiUrl = upiString;
 
-  // QR code
-  if (el.qrCanvas) {
-    if (!qrInstance) {
-      qrInstance = new QRious({
-        element: el.qrCanvas,
-        size: 200,
-        value: upiUrl,
-      });
-    } else {
-      qrInstance.value = upiUrl;
-    }
-  }
+  if (qrInstance) qrInstance.value = upiString;
+  el.qrNote.textContent = `Scan this QR to pay ${formatCurrency(
+    amount
+  )}. Ref: ${orderId}`;
 
-  if (el.qrNote) {
-    el.qrNote.textContent = `Scan this QR to pay ${formatCurrency(
-      amount
-    )}. Ref: ${orderId}`;
-  }
+  // Show UPI app buttons
+  if (el.upiApps) el.upiApps.style.display = "block";
 
-  // Show UPI buttons
-  if (el.upiPayBtn) el.upiPayBtn.style.display = "inline-flex";
-  if (el.upiAppsBox) el.upiAppsBox.style.display = "block";
-
-  notify("QR generated. Pay using any UPI app.");
+  notify("QR code ready. Pay using any UPI app.");
 }
 
-function openUpiApp() {
-  if (!lastUpiUrl) {
+function handleUpiAppPay() {
+  if (!currentUpiUrl) {
     notify("Generate the QR first.");
     return;
   }
-  // This will open the UPI link in whatever UPI app is installed/default
-  window.location.href = lastUpiUrl;
+  // Open UPI link – phone will ask which app (GPay / PhonePe / Paytm / etc.)
+  window.location.href = currentUpiUrl;
+}
+
+function buildOrderSummaryText({ paid }) {
+  const orderType = getSelectedOrderType();
+  const subtotal = calculateSubtotal();
+  const deliveryFee = calculateDeliveryFee();
+  const total = subtotal + deliveryFee;
+
+  const name = (el.customerName.value || "").trim() || "Not given";
+  const mobile = (el.customerMobile.value || "").trim() || "Not given";
+  const addr =
+    orderType === "delivery"
+      ? (el.deliveryAddress.value || "Not given")
+      : "Pickup at shop";
+
+  const lines = [];
+
+  lines.push(paid ? "✅ PAYMENT ORDER" : "📝 PREORDER (NOT PAID)");
+  lines.push(`Customer: ${name}`);
+  lines.push(`Mobile: ${mobile}`);
+  lines.push(`Type: ${orderType === "delivery" ? "Delivery" : "Pickup"}`);
+  lines.push(`Address: ${addr}`);
+  lines.push("");
+  lines.push("Items:");
+
+  cart.forEach((item) => {
+    lines.push(
+      `• ${item.name} × ${item.qty} = ${formatCurrency(
+        item.price * item.qty
+      )}`
+    );
+  });
+
+  lines.push("");
+  lines.push(`Subtotal: ${formatCurrency(subtotal)}`);
+  lines.push(`Delivery: ${formatCurrency(deliveryFee)}`);
+  lines.push(`Total: ${formatCurrency(total)}`);
+  lines.push("");
+  lines.push(
+    `Time: ${new Date().toLocaleString("en-IN", {
+      dateStyle: "short",
+      timeStyle: "short",
+    })}`
+  );
+
+  return lines.join("\n");
+}
+
+function sendOrderToWhatsApp(summary) {
+  const url =
+    "https://wa.me/" + OWNER_WHATSAPP + "?text=" + encodeURIComponent(summary);
+  window.open(url, "_blank");
 }
 
 function handlePaymentDone() {
   if (!ensureCartNotEmpty()) return;
 
-  const orderType = getOrderType();
-  const totalText = el.grandAmount.textContent || "₹0";
+  const summary = buildOrderSummaryText({ paid: true });
 
-  let summary = `✅ Payment Received!\n\n`;
-  summary += `Order type: ${orderType === "pickup" ? "Pickup at shop" : "Delivery"}\n`;
-  summary += `Amount: ${totalText}\n\nItems:\n`;
+  // Show on screen once (optional)
+  alert("Payment recorded. Sending order to shop WhatsApp.\n\n" + summary);
 
-  cart.forEach((item) => {
-    summary += `• ${item.name} × ${item.qty} = ${formatCurrency(
-      item.price * item.qty
-    )}\n`;
-  });
+  // Send to your WhatsApp
+  sendOrderToWhatsApp(summary);
 
-  if (orderType === "delivery") {
-    summary += `\nDelivery address: ${
-      el.deliveryAddress?.value || "Not specified"
-    }`;
-  }
-
-  alert(summary);
   cart = [];
   updateCartUI();
   notify("Order saved. Thank you!");
 }
 
-// ---------- PREORDER ----------
+// ================= PREORDER =================
 function handlePreorderSubmit(e) {
   e.preventDefault();
   if (!ensureCartNotEmpty()) return;
 
-  const orderType = getOrderType();
-  const subtotal = calculateSubtotal();
-  const distance = el.deliveryDistance ? el.deliveryDistance.value : 0;
-  const delivery = calculateDelivery(distance);
-  const total = subtotal + delivery;
-
-  const details = {
-    name: el.preorderName?.value || "",
-    contact: el.preorderContact?.value || "",
-    time: el.preorderTime?.value || "",
-    notes: el.preorderNotes?.value || "",
-  };
-
-  let summary = `✅ Preorder Confirmed!\n\n`;
-  summary += `Order type: ${orderType === "pickup" ? "Pickup at shop" : "Delivery"}\n`;
-  summary += `Total amount (approx): ${formatCurrency(total)}\n\n`;
-  summary += `Name: ${details.name || "-"}\n`;
-  summary += `Contact: ${details.contact || "-"}\n`;
-  summary += `Arrival time: ${details.time || "-"}\n`;
-  summary += `Notes: ${details.notes || "-"}\n\n`;
-  summary += `Items:\n`;
-
-  cart.forEach((item) => {
-    summary += `• ${item.name} × ${item.qty} = ${formatCurrency(
-      item.price * item.qty
-    )}\n`;
-  });
-
-  if (orderType === "delivery") {
-    summary += `\nDelivery address: ${
-      el.deliveryAddress?.value || "Not specified"
-    }`;
+  // For preorder, if customer did not fill top name/mobile, use preorder form
+  if (!el.customerName.value && el.preorderName.value) {
+    el.customerName.value = el.preorderName.value;
+  }
+  if (!el.customerMobile.value && el.preorderContact.value) {
+    el.customerMobile.value = el.preorderContact.value;
   }
 
-  alert(summary);
+  let summary = buildOrderSummaryText({ paid: false });
+
+  const extra = [];
+  if (el.preorderTime.value) extra.push("Arrival time: " + el.preorderTime.value);
+  if (el.preorderNotes.value.trim())
+    extra.push("Notes: " + el.preorderNotes.value.trim());
+  if (extra.length) {
+    summary += "\n\n" + extra.join("\n");
+  }
+
+  alert("Preorder saved. Sending details to shop WhatsApp.\n\n" + summary);
+  sendOrderToWhatsApp(summary);
+
   cart = [];
   updateCartUI();
   e.target.reset();
-  notify("Preorder saved. Pay at shop / on delivery.");
+  notify("Preorder logged. Pay at shop / on delivery.");
 }
 
-// ---------- PRINT BILL ----------
+// ================= PRINT BILL =================
 function printBill() {
   if (!ensureCartNotEmpty()) return;
 
-  const orderType = getOrderType();
+  const orderType = getSelectedOrderType();
   const subtotal = calculateSubtotal();
-  const distance = el.deliveryDistance ? el.deliveryDistance.value : 0;
-  const delivery = calculateDelivery(distance);
-  const total = subtotal + delivery;
+  const deliveryFee = calculateDeliveryFee();
+  const total = subtotal + deliveryFee;
 
-  const address =
+  const addr =
     orderType === "delivery"
-      ? el.deliveryAddress?.value || "Not specified"
-      : "—";
+      ? (el.deliveryAddress.value || "Not given")
+      : "Pickup at shop";
 
   const rows = cart
     .map(
       (item) => `
-      <tr>
-        <td>${item.name}</td>
-        <td>${item.qty}</td>
-        <td>${formatCurrency(item.price)}</td>
-        <td>${formatCurrency(item.price * item.qty)}</td>
-      </tr>
-    `
+    <tr>
+      <td>${item.name}</td>
+      <td>${item.qty}</td>
+      <td>${formatCurrency(item.price)}</td>
+      <td>${formatCurrency(item.price * item.qty)}</td>
+    </tr>`
     )
     .join("");
 
   const html = `
     <html>
       <head>
-        <title>Murugammal Tiffin Center - Bill</title>
+        <title>Murugammal Tiffin Center Bill</title>
         <style>
           body { font-family: 'Segoe UI', sans-serif; padding: 24px; }
-          h1 { text-align: center; margin-bottom: 4px; }
-          h2 { text-align: center; margin-top: 0; font-weight: normal; font-size: 0.95rem; }
+          h1 { text-align: center; }
           table { width: 100%; border-collapse: collapse; margin-top: 16px; }
           th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
           th { background: #f9f2ea; }
-          .totals { margin-top: 16px; width: 260px; float: right; }
-          .totals td { border: none; padding: 4px 0; }
+          .totals { margin-top: 16px; width: 320px; float: right; }
+          .totals td { border: none; }
         </style>
       </head>
       <body>
         <h1>Murugammal Tiffin Center</h1>
-        <h2>Palacode · Since 2010</h2>
         <p>${new Date().toLocaleString()}</p>
         <p><strong>Order type:</strong> ${
-          orderType === "pickup" ? "Pickup at shop" : "Delivery"
+          orderType === "delivery" ? "Delivery" : "Pickup"
         }</p>
-        <p><strong>Delivery address:</strong> ${address}</p>
-
+        <p><strong>Address:</strong> ${addr}</p>
         <table>
           <thead>
-            <tr>
-              <th>Item</th>
-              <th>Qty</th>
-              <th>Price</th>
-              <th>Total</th>
-            </tr>
+            <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
-
         <table class="totals">
           <tr><td>Subtotal:</td><td>${formatCurrency(subtotal)}</td></tr>
-          <tr><td>Delivery:</td><td>${formatCurrency(delivery)}</td></tr>
+          <tr><td>Delivery:</td><td>${formatCurrency(deliveryFee)}</td></tr>
           <tr><td><strong>Grand total:</strong></td><td><strong>${formatCurrency(
             total
           )}</strong></td></tr>
@@ -537,47 +555,3 @@ function printBill() {
   win.focus();
   win.print();
 }
-
-// ---------- EVENT BINDING ----------
-function attachEvents() {
-  if (el.clearCartBtn) el.clearCartBtn.addEventListener("click", clearCart);
-  if (el.printBillBtn) el.printBillBtn.addEventListener("click", printBill);
-
-  el.orderTypeRadios.forEach((radio) =>
-    radio.addEventListener("change", syncOrderType)
-  );
-  el.orderModeRadios.forEach((radio) =>
-    radio.addEventListener("change", syncOrderMode)
-  );
-
-  if (el.deliveryDistance) {
-    el.deliveryDistance.addEventListener("input", updateTotals);
-  }
-
-  if (el.generateQrBtn) {
-    el.generateQrBtn.addEventListener("click", handleGenerateQR);
-  }
-  if (el.paymentDoneBtn) {
-    el.paymentDoneBtn.addEventListener("click", handlePaymentDone);
-  }
-
-  if (el.upiPayBtn) el.upiPayBtn.addEventListener("click", openUpiApp);
-  if (el.payGpayBtn) el.payGpayBtn.addEventListener("click", openUpiApp);
-  if (el.payPhonePeBtn) el.payPhonePeBtn.addEventListener("click", openUpiApp);
-  if (el.payPaytmBtn) el.payPaytmBtn.addEventListener("click", openUpiApp);
-  if (el.payAnyUpiBtn) el.payAnyUpiBtn.addEventListener("click", openUpiApp);
-
-  if (el.preorderForm) {
-    el.preorderForm.addEventListener("submit", handlePreorderSubmit);
-  }
-}
-
-// ---------- INIT ----------
-document.addEventListener("DOMContentLoaded", () => {
-  cacheDom();
-  renderMenu();
-  attachEvents();
-  syncOrderType();
-  syncOrderMode();
-  updateCartUI();
-});

@@ -101,6 +101,18 @@
           <input type="text" id="delivery-address" placeholder="House / Street / Landmark">
         </div>
 
+        <!-- CUSTOMER INFO (for WhatsApp + admin) -->
+        <div class="customer-info" style="margin:12px 0;">
+          <div class="field">
+            <label for="customer-name">Your name</label>
+            <input type="text" id="customer-name" placeholder="Your name">
+          </div>
+          <div class="field">
+            <label for="customer-mobile">Mobile number (optional)</label>
+            <input type="tel" id="customer-mobile" placeholder="10-digit mobile">
+          </div>
+        </div>
+
         <!-- TOTALS -->
         <div class="totals">
           <div><span>Subtotal</span><strong id="subtotal-amount">₹0</strong></div>
@@ -131,26 +143,20 @@
               <canvas id="qr-canvas" aria-hidden="true"></canvas>
               <p id="qr-note">QR will appear after you click “Generate QR”.</p>
             </div>
-           <div class="mode-actions">
-  <button class="btn filled" id="generate-qr-btn">Generate QR</button>
-  <button class="btn outline" id="payment-done-btn">Payment Received</button>
-</div>
+            <div class="mode-actions">
+              <button class="btn filled" id="generate-qr-btn">Generate QR</button>
+              <button class="btn outline" id="payment-done-btn">Payment Received</button>
+            </div>
 
-<!-- New: UPI app buttons -->
-<div class="upi-apps" id="upi-apps" style="display:none; margin-top:10px;">
-  <p class="hint">Or pay using your UPI app:</p>
-  <div class="upi-buttons" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
-    <button class="btn outline" id="pay-gpay-btn">Google Pay</button>
-    <button class="btn outline" id="pay-phonepe-btn">PhonePe</button>
-    <button class="btn outline" id="pay-paytm-btn">Paytm</button>
-    <button class="btn ghost" id="pay-anyupi-btn">Other UPI app</button>
-  </div>
-</div>
-
-              <!-- New: direct UPI app button (GPay / PhonePe / Paytm) -->
-              <button class="btn filled" id="upi-pay-btn" style="display:none;">
-                Pay with UPI app
-              </button>
+            <!-- UPI app style buttons (all use same UPI link) -->
+            <div class="upi-apps" id="upi-apps" style="display:none; margin-top:10px;">
+              <p class="hint">Or pay using your UPI app:</p>
+              <div class="upi-buttons" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
+                <button class="btn outline" id="pay-gpay-btn">Google Pay</button>
+                <button class="btn outline" id="pay-phonepe-btn">PhonePe</button>
+                <button class="btn outline" id="pay-paytm-btn">Paytm</button>
+                <button class="btn ghost" id="pay-anyupi-btn">Other UPI app</button>
+              </div>
             </div>
           </div>
 
