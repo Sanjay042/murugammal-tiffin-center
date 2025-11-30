@@ -66,8 +66,10 @@ const MENU_ITEMS = [
 
 // ---------- GLOBAL STATE ----------
 let cart = [];
-let qrInstance = null;
+let qrInstance;
 let lastUpiUrl = "";
+let lastUpiPlain = "";   // generic upi://pay link
+let lastUpiParams = "";  // everything after '?'
 let ordersCache = [];
 
 const el = {}; // DOM elements
@@ -168,6 +170,11 @@ function cacheCustomerDom() {
   el.printBillBtn = document.getElementById("print-bill-btn");
 
   el.toast = document.getElementById("toast");
+    // Success overlay
+  el.successOverlay = document.getElementById("success-overlay");
+  el.successMessage = document.getElementById("success-message");
+  el.successOkBtn = document.getElementById("success-ok-btn");
+
 }
 
 function initCustomer() {
@@ -226,17 +233,17 @@ function initCustomer() {
 
   el.generateQrBtn?.addEventListener("click", handleGenerateQR);
 
-  const openUpi = () => {
-    if (!lastUpiUrl) {
-      notify("Generate the QR first.");
-      return;
-    }
-    window.location.href = lastUpiUrl;
-  };
-  el.payGpayBtn?.addEventListener("click", openUpi);
-  el.payPhonePeBtn?.addEventListener("click", openUpi);
-  el.payPaytmBtn?.addEventListener("click", openUpi);
-  el.payAnyUpiBtn?.addEventListener("click", openUpi);
+    // App-specific UPI buttons
+  el.payGpayBtn?.addEventListener("click", () => openUpiFor("gpay"));
+  el.payPhonePeBtn?.addEventListener("click", () => openUpiFor("phonepe"));
+  el.payPaytmBtn?.addEventListener("click", () => openUpiFor("paytm"));
+  el.payAnyUpiBtn?.addEventListener("click", () => openUpiFor("any"));
+
+  // Success screen OK
+  el.successOkBtn?.addEventListener("click", () => {
+    el.successOverlay?.classList.remove("show");
+  });
+
 
   el.placeOrderBtn?.addEventListener("click", handlePlaceOrder);
   el.clearCartBtn?.addEventListener("click", clearCart);
@@ -458,17 +465,38 @@ function handlePlaceOrder() {
   ordersCache.push(order);
   saveOrders();
 
-  alert(
-    `✅ Order saved!\n\nName: ${order.customerName}\nMobile: ${order.customerPhone}\nMode: ${
-      mode === "pay-now" ? "Pay now (UPI)" : "Preorder"
-    }\nType: ${type === "pickup" ? "Pickup" : "Delivery"}\nTotal: ${formatCurrency(
-      total
-    )}\n\nShow this screen and your UPI payment to the shop owner.`
-  );
+  showSuccessScreen(order);
 
   cart = [];
   updateCartUI();
 }
+function showSuccessScreen(order) {
+  if (!el.successOverlay || !el.successMessage) {
+    // fallback if something missing
+    alert(
+      `✅ Order saved!\n\n` +
+        `Order ID: ${order.id}\n` +
+        `Name: ${order.customerName}\n` +
+        `Mobile: ${order.customerPhone}\n` +
+        `Total: ${formatCurrency(order.total)}`
+    );
+    return;
+  }
+
+  const modeText =
+    order.mode === "pay-now" ? "Pay now (UPI)" : "Preorder (pay at counter)";
+  const typeText = order.type === "pickup" ? "Pickup at shop" : "Delivery";
+
+  el.successMessage.innerHTML =
+    `Order ID: <strong>${order.id}</strong><br>` +
+    `Name: <strong>${order.customerName}</strong><br>` +
+    `Mobile: <strong>${order.customerPhone}</strong><br>` +
+    `Amount: <strong>${formatCurrency(order.total)}</strong><br>` +
+    `${modeText} · ${typeText}`;
+
+  el.successOverlay.classList.add("show");
+}
+
 
 // ----- Print bill -----
 function printBill() {
