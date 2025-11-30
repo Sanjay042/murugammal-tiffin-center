@@ -1,51 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ta">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Murugammal Tiffin Center · Since 2010</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>முருகம்மாள் காலை உணவகம் · Murugammal Tiffin Center</title>
 
-  <!-- PWA + theme -->
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#c95d2d" />
+  <!-- Icon + PWA -->
+  <link rel="icon" type="image/png" href="images/mtc-logo-512.png">
+  <link rel="manifest" href="manifest.json">
 
   <!-- Attractive fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
-<body data-page="customer">
+<body>
   <div class="page-shell">
     <header class="hero">
       <div class="hero__text">
-        <p class="hero__eyebrow">Since 2010 · Authentic Tiffin House</p>
-        <h1>
-          <img src="images/mtc-logo-512.png"
-               alt="Murugammal Tiffin Center logo"
-               style="width:70px;height:70px;border-radius:50%;vertical-align:middle;margin-right:10px;object-fit:cover;">
-          Murugammal Tiffin Center
-        </h1>
+        <p class="hero__eyebrow">SINCE 2010 · AUTHENTIC TIFFIN HOUSE</p>
+
+        <!-- Logo + names -->
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:8px;">
+          <img src="images/mtc-logo-512.png" alt="முருகம்மாள் காலை உணவகம் லோகோ" class="hero__logo" style="width:64px;height:64px;border-radius:50%;object-fit:cover;">
+          <div>
+            <h1 style="margin:0;">முருகம்மாள் காலை உணவகம்</h1>
+            <p style="margin:2px 0 0;font-weight:500;color:#7b5a42;">Murugammal Tiffin Center</p>
+          </div>
+        </div>
+
         <p class="hero__description">
-          Freshly made South Indian breakfast staples, now with easy preorder and UPI pay options.
+          Freshly made South Indian breakfast – order online, pay with UPI, and pick up or get delivery within 1 km.
         </p>
+
         <div class="hero__meta">
           <div>
-            <p class="meta-label">Location</p>
+            <p class="meta-label">LOCATION</p>
             <p>833C+39F, Palacode, Tamil Nadu 636808</p>
             <button class="btn ghost" onclick="window.open('https://maps.google.com/?q=833C+39F+Palacode+Tamil+Nadu+636808','_blank')">
               📍 View on Maps
             </button>
           </div>
           <div>
-            <p class="meta-label">Order by Phone</p>
+            <p class="meta-label">ORDER BY PHONE</p>
             <p>Main: <a href="tel:8531030451">85310 30451</a></p>
             <p>Alt: <a href="tel:9025959797">90259 59797</a></p>
             <p class="meta-note">Delivery under 1 km only — charges based on distance.</p>
           </div>
         </div>
       </div>
+
       <div class="hero__badge">
         <span>Serving Palacode</span>
         <strong>Low-cost meals</strong>
@@ -57,8 +63,8 @@
       <!-- MENU -->
       <section class="menu-panel">
         <div class="panel-heading">
-          <h2>Menu Highlights</h2>
-          <p>Tap any dish to add it straight to your cart.</p>
+          <h2>Today’s Menu</h2>
+          <p>Tap “Add to cart” to start your order.</p>
         </div>
         <div class="menu-grid" id="menu-grid" aria-live="polite"></div>
       </section>
@@ -69,6 +75,19 @@
           <h2>Your Cart</h2>
           <span id="cart-count-pill">0 items</span>
         </div>
+
+        <!-- CUSTOMER DETAILS -->
+        <section class="customer-details">
+          <h3 style="font-size:1rem;margin-bottom:8px;">Your details</h3>
+          <div class="field">
+            <label for="customer-name">Name (required)</label>
+            <input type="text" id="customer-name" placeholder="e.g. Sanjay">
+          </div>
+          <div class="field">
+            <label for="customer-phone">Mobile number (required)</label>
+            <input type="tel" id="customer-phone" placeholder="10-digit mobile">
+          </div>
+        </section>
 
         <div class="cart-table-wrapper">
           <table>
@@ -87,21 +106,6 @@
           </table>
         </div>
 
-        <!-- CUSTOMER DETAILS -->
-        <section class="customer-info">
-          <h3>Who is ordering?</h3>
-          <div class="field-row">
-            <div class="field">
-              <label for="customer-name">Name</label>
-              <input type="text" id="customer-name" placeholder="Your name">
-            </div>
-            <div class="field">
-              <label for="customer-phone">Mobile number</label>
-              <input type="tel" id="customer-phone" placeholder="10-digit mobile">
-            </div>
-          </div>
-        </section>
-
         <!-- ORDER TYPE: PICKUP vs DELIVERY -->
         <div class="order-type">
           <p>How will you get your order?</p>
@@ -115,7 +119,7 @@
           </label>
         </div>
 
-        <!-- DELIVERY FIELDS: ONLY WHEN DELIVERY IS SELECTED -->
+        <!-- DELIVERY FIELDS -->
         <div id="delivery-section" class="delivery-form" style="display:none;">
           <label for="delivery-distance">Delivery distance (meters)</label>
           <input type="number" id="delivery-distance" min="0" step="50" value="0">
@@ -134,14 +138,14 @@
 
         <!-- ORDER MODE: PAY NOW vs PREORDER -->
         <div class="order-mode">
-          <p>How do you want to complete this order?</p>
+          <p>How do you want to finish?</p>
           <label>
             <input type="radio" name="order-mode" value="pay-now" checked>
             Pay now (UPI QR)
           </label>
           <label>
             <input type="radio" name="order-mode" value="preorder">
-            Preorder & pay on arrival
+            Preorder & pay at shop / delivery
           </label>
         </div>
 
@@ -150,7 +154,7 @@
           <!-- PAY NOW -->
           <div id="pay-now-panel" class="mode-panel">
             <h3>UPI Payment</h3>
-            <p>Generate a QR with the current total and pay using any UPI app.</p>
+            <p>1) Generate QR, 2) Pay using any UPI app, 3) Tap “Place order”.</p>
             <div class="qr-box">
               <canvas id="qr-canvas" aria-hidden="true"></canvas>
               <p id="qr-note">QR will appear after you click “Generate QR”.</p>
@@ -160,10 +164,10 @@
               <button class="btn filled" id="generate-qr-btn">Generate QR</button>
             </div>
 
-            <!-- UPI APP BUTTONS -->
-            <div class="upi-apps" id="upi-apps" style="display:none;margin-top:10px;">
-              <p class="hint">Or pay using your favourite UPI app:</p>
-              <div class="upi-buttons" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
+            <!-- UPI app buttons -->
+            <div class="upi-apps" id="upi-apps" style="display:none; margin-top:10px;">
+              <p class="hint">Or tap your UPI app:</p>
+              <div class="upi-buttons" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
                 <button class="btn outline" id="pay-gpay-btn">Google Pay</button>
                 <button class="btn outline" id="pay-phonepe-btn">PhonePe</button>
                 <button class="btn outline" id="pay-paytm-btn">Paytm</button>
@@ -174,31 +178,26 @@
 
           <!-- PREORDER -->
           <div id="preorder-panel" class="mode-panel" style="display:none;">
-            <h3>Preorder & Pick Up / Delivery</h3>
-            <p>We’ll prep your order now. Pay when you reach the shop or on delivery.</p>
-            <div class="field">
-              <label for="preorder-time">When will you arrive?</label>
-              <input type="time" id="preorder-time">
-            </div>
-            <div class="field">
-              <label for="preorder-notes">Notes</label>
-              <textarea id="preorder-notes" rows="2" placeholder="Any special request?"></textarea>
-            </div>
+            <h3>Preorder details</h3>
+            <p>We’ll prep your order now. Pay at counter or on delivery.</p>
+            <form id="preorder-form">
+              <div class="field">
+                <label for="preorder-time">Approx. time you’ll reach</label>
+                <input type="time" id="preorder-time">
+              </div>
+              <div class="field">
+                <label for="preorder-notes">Notes</label>
+                <textarea id="preorder-notes" rows="2" placeholder="Any special request?"></textarea>
+              </div>
+            </form>
           </div>
-        </div>
-
-        <!-- PLACE ORDER BUTTON -->
-        <div class="place-order">
-          <button class="btn filled wide" id="place-order-btn">Place order</button>
-          <p class="hint" id="place-order-hint">
-            For “Pay now” please complete UPI payment first, then tap Place order and show payment screen at the shop.
-          </p>
         </div>
 
         <!-- CART ACTIONS -->
         <div class="cart-actions">
           <button class="btn ghost" id="clear-cart-btn">Clear cart</button>
           <button class="btn outline" id="print-bill-btn">Print bill</button>
+          <button class="btn filled" id="place-order-btn" style="flex:1;">Place order</button>
         </div>
       </section>
     </main>
@@ -209,24 +208,8 @@
       </p>
     </section>
   </div>
-    <!-- SUCCESS SCREEN OVERLAY -->
-     <section class="contact-strip">
-      <p>Delivery available up to 1 km. ₹10 for first 100 m, then tiered pricing.
-        <span>WhatsApp / Call: <a href="tel:8531030451">85310 30451</a></span>
-      </p>
-    </section>
-  </div>
 
-  <!-- SUCCESS SCREEN OVERLAY -->
-  <div id="success-overlay" class="success-overlay" aria-hidden="true">
-    <div class="success-card">
-      <div class="success-icon">✅</div>
-      <h2 id="success-title">Order placed!</h2>
-      <p id="success-message"></p>
-      <button class="btn filled" id="success-ok-btn">OK</button>
-    </div>
-  </div>
-
+  <!-- Toast -->
   <div id="toast" role="status" aria-live="assertive"></div>
 
   <!-- QR library + main script -->
@@ -235,4 +218,3 @@
   <script src="script.js"></script>
 </body>
 </html>
-
